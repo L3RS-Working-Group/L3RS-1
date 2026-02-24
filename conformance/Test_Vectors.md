@@ -1,4 +1,4 @@
-# Canonical Serialization Test Vectors (Draft)
+# Canonical Serialization Test Vectors
 
 The following test vectors SHALL produce identical CID outputs across implementations.
 
