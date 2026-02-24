@@ -20,3 +20,4 @@
 ## Phase 4 – Governance Evolution
 - Working group expansion
 - Independent foundation transition
+- 
