@@ -4,7 +4,7 @@
 **Project:** L3RS Working Group  
 **Version:** 1.0.0  
 **Status:** Initial Public Release  
-**Date:** [Insert Date]
+**Date:** 24 February 2026
 
 ---
 
