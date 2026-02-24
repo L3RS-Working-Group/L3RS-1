@@ -18,3 +18,4 @@ Profiles define how L3RS-1 binds to specific execution environments.
 - Domain governance anchoring
 
 Profiles SHALL preserve all protocol invariants.
+
