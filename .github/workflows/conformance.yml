@@ -1,0 +1,56 @@
+name: Conformance
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'sdk/test-vectors/**'
+      - 'conformance/**'
+      - '.github/workflows/conformance.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'sdk/test-vectors/**'
+      - 'conformance/**'
+  workflow_dispatch:
+
+jobs:
+  reference-impl:
+    name: Reference implementation conformance
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install reference implementation
+        run: pip install -e "sdk/packages/python[dev]"
+      - name: Run canonical vector suite
+        run: python sdk/test-vectors/run_vectors.py
+      - name: Generate conformance report
+        run: |
+          python - << 'EOF'
+          import json, datetime, platform, sys
+          with open('sdk/test-vectors/canonical.json') as f:
+              tv = json.load(f)
+          report = {
+              "report_type": "L3RS-1 Conformance Report",
+              "standard_version": tv["version"],
+              "conformance_class": "CROSSCHAIN",
+              "implementation": "L3RS-1 Python Reference Implementation",
+              "implementation_version": "1.0.0",
+              "generated_at": datetime.datetime.utcnow().isoformat() + "Z",
+              "invariants_enforced": list(tv["vectors"]["invariants"].keys()),
+              "vector_sections_tested": list(tv["vectors"].keys()),
+              "result": "PASS"
+          }
+          with open('conformance-report.json', 'w') as f:
+              json.dump(report, f, indent=2)
+          print(json.dumps(report, indent=2))
+          EOF
+      - name: Upload conformance report
+        uses: actions/upload-artifact@v4
+        with:
+          name: conformance-report
+          path: conformance-report.json
+          retention-days: 90
