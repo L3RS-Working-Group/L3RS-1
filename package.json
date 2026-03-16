@@ -1,5 +1,5 @@
 {
-  "name": "l3rs1-sdk-monorepo",
+  "name": "l3rs1",
   "private": true,
   "description": "L3RS-1 Reference Implementation — monorepo root",
   "workspaces": [
@@ -7,15 +7,15 @@
     "packages/solidity"
   ],
   "scripts": {
-    "build:ts":       "npm run build   --workspace=packages/typescript",
-    "test:ts":        "npm run test    --workspace=packages/typescript",
-    "compile:sol":    "npm run compile --workspace=packages/solidity",
-    "test:sol":       "npm run test    --workspace=packages/solidity",
-    "test:vectors":   "python3 test-vectors/run_vectors.py",
-    "test:all":       "npm run test:ts && npm run test:vectors"
+    "build:ts":     "npm run build   --workspace=packages/typescript",
+    "test:ts":      "npm run test    --workspace=packages/typescript",
+    "compile:sol":  "npm run compile --workspace=packages/solidity",
+    "test:sol":     "npm run test    --workspace=packages/solidity",
+    "test:vectors": "python3 test-vectors/run_vectors.py",
+    "test:all":     "npm run test:ts && npm run test:vectors"
   },
   "engines": {
     "node": ">=22.0.0",
-    "npm":  ">=10.0.0"
+    "npm": ">=10.0.0"
   }
 }

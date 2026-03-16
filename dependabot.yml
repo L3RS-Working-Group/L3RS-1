@@ -1,0 +1,76 @@
+version: 2
+
+updates:
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    labels:
+      - "dependencies"
+      - "ci"
+
+  # TypeScript SDK
+  - package-ecosystem: "npm"
+    directory: "/packages/typescript"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    labels:
+      - "dependencies"
+      - "typescript"
+    ignore:
+      # Only auto-update patch versions for crypto libs — semver minors need review
+      - dependency-name: "@noble/*"
+        update-types: ["version-update:semver-minor", "version-update:semver-major"]
+
+  # Solidity contracts
+  - package-ecosystem: "npm"
+    directory: "/packages/solidity"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    labels:
+      - "dependencies"
+      - "solidity"
+
+  # Python SDK
+  - package-ecosystem: "pip"
+    directory: "/packages/python"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    labels:
+      - "dependencies"
+      - "python"
+
+  # Rust SDK
+  - package-ecosystem: "cargo"
+    directory: "/packages/rust"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    labels:
+      - "dependencies"
+      - "rust"
+
+  # Go SDK
+  - package-ecosystem: "gomod"
+    directory: "/packages/go"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    labels:
+      - "dependencies"
+      - "go"
+
+  # Java SDK
+  - package-ecosystem: "maven"
+    directory: "/packages/java"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    labels:
+      - "dependencies"
+      - "java"

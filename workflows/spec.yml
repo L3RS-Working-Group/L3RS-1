@@ -1,0 +1,41 @@
+name: Specification CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'specification/**'
+      - '.github/workflows/spec.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'specification/**'
+      - '.github/workflows/spec.yml'
+
+jobs:
+  build-pdf:
+    name: Build LaTeX specification
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install TeX Live
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            texlive-latex-base \
+            texlive-latex-extra \
+            texlive-fonts-recommended \
+            texlive-science \
+            latexmk
+
+      - name: Build PDF
+        working-directory: specification
+        run: latexmk -pdf -interaction=nonstopmode -halt-on-error *.tex
+
+      - name: Upload PDF artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: L3RS-1-specification
+          path: specification/*.pdf
+          retention-days: 30
