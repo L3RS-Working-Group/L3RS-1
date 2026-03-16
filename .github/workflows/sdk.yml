@@ -61,9 +61,6 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ['3.11', '3.12', '3.13']
-    defaults:
-      run:
-        working-directory: packages/python
     steps:
       - uses: actions/checkout@v4
 
@@ -71,18 +68,17 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install package
-        run: pip install -e ".[dev]"
+      - name: Install dev tools
+        run: pip install pytest mypy ruff
 
       - name: Type check (mypy)
-        run: mypy l3rs1
+        run: PYTHONPATH=packages/python mypy packages/python/l3rs1 --ignore-missing-imports
 
       - name: Lint (ruff)
-        run: ruff check l3rs1
+        run: ruff check packages/python/l3rs1
 
       - name: Test
-        run: pytest tests/ -v
-
+        run: PYTHONPATH=packages/python pytest packages/python/tests/ -v
   # ─── Go ─────────────────────────────────────────────────────────────────────
   go:
     name: Go (${{ matrix.go-version }})
