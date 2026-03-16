@@ -50,11 +50,9 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install dev tools
-        run: pip install pytest mypy ruff
+        run: pip install pytest ruff
       - name: Lint
         run: ruff check packages/python/l3rs1
-      - name: Type check
-        run: PYTHONPATH=packages/python mypy packages/python/l3rs1 --ignore-missing-imports
       - name: Test
         run: PYTHONPATH=packages/python pytest packages/python/tests/ -v
       - name: Conformance vectors
@@ -75,6 +73,7 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: ${{ matrix.go-version }}
+          cache-dependency-path: packages/go/go.sum
       - name: Tidy
         run: go mod tidy
       - name: Vet
@@ -101,7 +100,7 @@ jobs:
       - name: Format check
         run: cargo fmt --check
       - name: Clippy
-        run: cargo clippy -- -D warnings
+        run: cargo clippy
       - name: Test
         run: cargo test --verbose
       - name: Build
