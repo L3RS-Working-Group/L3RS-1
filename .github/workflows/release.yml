@@ -1,0 +1,150 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'sdk/v*'
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+
+  validate:
+    name: Validate release tag
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.extract.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Extract version from tag
+        id: extract
+        run: |
+          TAG="${GITHUB_REF#refs/tags/sdk/v}"
+          echo "version=$TAG" >> "$GITHUB_OUTPUT"
+          echo "Releasing SDK version: $TAG"
+      - name: Check all packages match tag version
+        run: |
+          VERSION="${GITHUB_REF#refs/tags/sdk/v}"
+          TS_VER=$(node -p "require('./sdk/packages/typescript/package.json').version")
+          PY_VER=$(python3 -c "import tomllib; print(tomllib.load(open('sdk/packages/python/pyproject.toml','rb'))['project']['version'])")
+          RUST_VER=$(grep '^version' sdk/packages/rust/Cargo.toml | head -1 | cut -d'"' -f2)
+          echo "Tag: $VERSION  TS: $TS_VER  Python: $PY_VER  Rust: $RUST_VER"
+          if [ "$TS_VER" != "$VERSION" ] || [ "$PY_VER" != "$VERSION" ] || [ "$RUST_VER" != "$VERSION" ]; then
+            echo "ERROR: Version mismatch"; exit 1
+          fi
+
+  ci-gate:
+    name: CI gate
+    needs: validate
+    uses: ./.github/workflows/sdk.yml
+
+  publish-npm:
+    name: Publish to npm
+    needs: [validate, ci-gate]
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: sdk/packages/typescript
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          registry-url: 'https://registry.npmjs.org'
+      - run: npm ci
+      - run: npm run build
+      - run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  publish-pypi:
+    name: Publish to PyPI
+    needs: [validate, ci-gate]
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/project/l3rs1-sdk/
+    defaults:
+      run:
+        working-directory: sdk/packages/python
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build distributions
+        run: |
+          pip install build
+          python -m build
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: sdk/packages/python/dist/
+
+  publish-crates:
+    name: Publish to crates.io
+    needs: [validate, ci-gate]
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: sdk/packages/rust
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: sdk/packages/rust
+      - run: cargo publish --token ${{ secrets.CRATES_IO_TOKEN }}
+
+  publish-contracts:
+    name: Publish @l3rs/contracts to npm
+    needs: [validate, ci-gate]
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: sdk/packages/solidity
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          registry-url: 'https://registry.npmjs.org'
+      - run: npm ci
+      - run: npx hardhat compile
+      - run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  github-release:
+    name: Create GitHub Release
+    needs: [validate, publish-npm, publish-pypi, publish-crates, publish-contracts]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build release archive
+        run: |
+          VERSION=${{ needs.validate.outputs.version }}
+          zip -r l3rs1-sdk-v${VERSION}.zip sdk/ \
+            -x "*.pyc" -x "*/__pycache__/*" -x "*/node_modules/*" \
+            -x "*/target/*" -x "*/dist/*"
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: L3RS-1 SDK v${{ needs.validate.outputs.version }}
+          tag_name: ${{ github.ref_name }}
+          body: |
+            ## L3RS-1 SDK v${{ needs.validate.outputs.version }}
+            Reference implementation — CROSSCHAIN conformance class, all invariants I₁–I₁₁.
+
+            | Language | Install |
+            |---|---|
+            | TypeScript | `npm install @l3rs/reference-impl` |
+            | Python | `pip install l3rs1-sdk` |
+            | Rust | `cargo add l3rs1-sdk` |
+            | Go | `go get github.com/L3RS-Working-Group/L3RS-1/sdk/go@v${{ needs.validate.outputs.version }}` |
+            | Solidity | `npm install @l3rs/contracts` |
+          files: l3rs1-sdk-v${{ needs.validate.outputs.version }}.zip
+          draft: false
+          prerelease: false
