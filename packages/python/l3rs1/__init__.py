@@ -1,26 +1,14 @@
 """
-L3RS-1 Core Modules — Python
-asset · compliance · identity · governance · settlement
+l3rs1 — L3RS-1 Reference Implementation SDK
+Layer-3 Regulated Asset Standard v1.0.0 — CROSSCHAIN Conformance
 """
-from __future__ import annotations
+from .types import *
+from .crypto import *
+from .modules import *
 
-import math
-import struct
-from dataclasses import dataclass
-from typing import Optional, Protocol
-
-from ..types import (
-    Asset, AssetState, ComplianceDecision, ComplianceModule, ComplianceRule,
-    EnforcementAction, GovernanceAction, GovernanceModule, IdentityLevel,
-    IdentityRecord, IdentityStatus, OverrideObject, FeeModule, ReserveInterface,
-    ReserveStatus, AttestationFrequency, RuleType, SettlementProof, TransferEvent,
-    ZKProof,
-)
-from ..crypto import (
-    construct_override_hash, construct_tx_id, hash_object, sha256_concat,
-    canonicalize, construct_cid, SignatureVerifier,
-)
-import struct
+SDK_VERSION       = "1.0.0"
+STANDARD_VERSION  = "L3RS-1.0.0"
+CONFORMANCE_CLASS = "CROSSCHAIN"
 
 
 # ══════════════════════════════════════════════════════════════════════════════
