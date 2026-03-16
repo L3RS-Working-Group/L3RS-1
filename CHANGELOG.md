@@ -1,0 +1,119 @@
+# Changelog
+
+All notable changes to the L3RS-1 SDK are documented here.
+
+Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html) — see §11.7 of the L3RS-1 specification.
+
+---
+
+## [1.0.0] — 2026-03-16
+
+### Initial release — CROSSCHAIN conformance class
+
+First public release of the L3RS-1 reference implementation SDK, implementing the full L3RS-1 v1.0.0 specification (CROSSCHAIN conformance class).
+
+**Languages:** TypeScript, Python, Go, Rust, Java, Solidity
+
+#### Added
+
+**Core (§2 Formal Asset Model)**
+- `AssetType` enumeration: CBDC, INDUSTRY_STABLE, REGULATED_SECURITY, UTILITY, GOVERNANCE, STORAGE_BACKED
+- `AssetState` enumeration: ISSUED, ACTIVE, RESTRICTED, FROZEN, SUSPENDED, REDEEMED, BURNED
+- Deterministic state transition matrix (§2.5) — all 9 valid transitions enforced
+- `Asset_ID` construction: `H(pk_issuer ∥ ts ∥ nonce)` (§2.2)
+- Deterministic 7-step transfer execution (§2.6–2.7)
+- Strict asset validation (§13.14)
+
+**Identity Binding (§3)**
+- `IdentityRecord` model: `IR = (HID, VA, JI, EXP, REV, ATTR, PROOF)`
+- `IdentityStatus` function: VALID / EXPIRED / REVOKED / UNKNOWN (§3.6)
+- Identity requirement levels 0–3 (§3.2)
+- Multi-jurisdiction identity stacking (§3.9)
+- ZKP interface stub (§3.8) — implementer supplies real backend
+- Identity hash construction: `HID = H(PII ∥ salt ∥ domain)` (§3.4)
+
+**Compliance Engine (§4)**
+- Total decision function `C: E → {0,1}` (§4.3)
+- O(n) bounded rule evaluation in priority order (§4.5, §14.3)
+- Rule types: TRANSFER_ELIGIBILITY, INVESTOR_CLASSIFICATION, HOLDING_PERIOD, GEOGRAPHIC_RESTRICTION, SANCTIONS_SCREENING, TRANSACTION_THRESHOLD, AML_TRIGGER, MARKET_RESTRICTION, REDEMPTION_ELIGIBILITY
+- Enforcement actions: REJECT, FREEZE, RESTRICT, FLAG, REQUIRE_DISCLOSURE (§4.7)
+- Sanctions screening with registry hash anchoring (§4.8)
+- Holding period enforcement (§4.9)
+- Transaction threshold rules (§4.10)
+- Compliance-driven state transitions (§4.12)
+
+**Governance Override (§5)**
+- Override object model: `O = (OID, AUTH, ACTION, TARGET, BASIS, TS, SIG)` (§5.2)
+- Six authorized actions: FREEZE_BALANCE, UNFREEZE_BALANCE, RESTRICT_TRANSFER, SEIZE_ASSET, FORCE_REDEMPTION, EMERGENCY_ROLLBACK (§5.3)
+- Signature verification interface (§5.4)
+- Quorum requirement: ⌈2/3 × N⌉ for EMERGENCY_ROLLBACK (§5.5)
+- Legal basis hash requirement (§5.7)
+- Immutable override logging (§5.10)
+- Separation of duties check (§5.12)
+
+**Fee Routing (§6)**
+- Deterministic fee distribution in basis points (§6.5)
+- Economic integrity constraints: sum must equal 10000 bps, no negative allocations (§6.12)
+- Fee record hash: `H(tx_id ∥ fee ∥ timestamp)` (§6.10)
+- Atomicity with transfer settlement (§6.6)
+
+**Reserve Interface (§7)**
+- Reserve status function: VALID / STALE / INVALID / UNKNOWN (§7.8)
+- Attestation frequency enumeration (§7.7)
+- Asset backing type enumeration (§7.5)
+- Insolvency priority classification (§7.11)
+- Redemption logic model (§7.9)
+
+**Cross-Chain Meta-Standard (§8)**
+- CID construction: `H(I ∥ SH ∥ CH ∥ GH ∥ t)` (§8.3)
+- Cross-chain verification function (§8.9)
+- Downgrade resistance: compliance and governance hashes must match (§8.10)
+- Asset_ID invariance across chains (§8.4)
+- Chain ID construction: `H(chain_name ∥ network_type ∥ genesis_hash)` (§8.11)
+
+**Settlement (§9)**
+- Atomic settlement: all components must succeed or none commit (§9.3)
+- TxID construction: `H(sender ∥ receiver ∥ amount ∥ nonce ∥ timestamp)` (§9.6)
+- Replay protection via ledger history (§9.6)
+- Settlement proof object (§9.10)
+- Rollback recording (§9.9)
+
+**Canonical Schema (§13)**
+- Complete canonical data schema for all L3RS-1 objects
+- Deterministic canonical JSON serialization (§13.11)
+- SHA-256 hash computation standard (§13.12)
+- Strict validation rules (§13.14)
+
+**Protocol Invariants (§10)**
+- I₁: State transitions only via validated functions
+- I₂: No transfer if any compliance rule evaluates FALSE
+- I₃: Identity validation required when level ≥ 1
+- I₄: Governance overrides require valid signature and quorum
+- I₅: Compliance and governance hashes invariant across chains
+- I₆: Asset references enforceable legal basis
+- I₇: `Hash(SerializedAsset) = StoredAssetHash`
+- I₈: Bounded execution costs
+- I₉–I₁₀: Deployment and profile invariants
+- I₁₁: CID changes if any of (S, C, G, J, L) changes
+
+**Test Infrastructure**
+- 92 canonical conformance test vectors (§11.5)
+- Language-specific test suites: TypeScript (Jest), Python (pytest), Go (testing), Rust (cargo test), Java (JUnit 5), Solidity (Hardhat/Mocha)
+- CI workflows: sdk.yml, conformance.yml, release.yml, spec.yml
+- Dependabot configuration for all 6 package ecosystems
+
+**Solidity (EVM Profile A — §17.2)**
+- `IL3RS1Asset` interface
+- `L3RS1Asset` reference implementation contract
+- `L3RS1Hashing` library with all canonical hash constructions
+
+---
+
+## Roadmap
+
+Future versions will follow the amendment governance process defined in §11.8.
+
+- **v1.1.0** — ZKP backend integrations (Groth16, PLONK), EdDSA/ECDSA signature verifier implementations
+- **v1.2.0** — Conformance test CLI (`@l3rs/conformance-tests`)
+- **v2.0.0** — Breaking changes only with L3RS-1 MAJOR spec version increment
