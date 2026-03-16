@@ -3,81 +3,48 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-
     <groupId>foundation.l3rs1</groupId>
     <artifactId>l3rs1-sdk</artifactId>
     <version>1.0.0</version>
     <packaging>jar</packaging>
-
     <name>L3RS-1 SDK</name>
     <description>Layer-3 Regulated Asset Standard — Reference Implementation</description>
     <url>https://www.l3rs.foundation/developers</url>
-
     <licenses>
-        <license>
-            <name>Apache License, Version 2.0</name>
-            <url>https://www.apache.org/licenses/LICENSE-2.0</url>
-        </license>
+        <license><name>Apache-2.0</name></license>
     </licenses>
-
-    <scm>
-        <connection>scm:git:https://github.com/L3RS-Foundation/L3RS-1.git</connection>
-        <url>https://github.com/L3RS-Foundation/L3RS-1/tree/main/sdk/packages/java</url>
-    </scm>
-
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <junit.version>5.10.2</junit.version>
-        <surefire.version>3.2.5</surefire.version>
     </properties>
-
-    <!-- Zero runtime dependencies — pure JDK 21 stdlib only -->
     <dependencies>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
-            <version>${junit.version}</version>
+            <version>5.10.2</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-params</artifactId>
-            <version>${junit.version}</version>
+            <version>5.10.2</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
-
     <build>
         <plugins>
-            <!-- Maven Surefire 3.x required for JUnit 5 support -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>${surefire.version}</version>
+                <version>3.2.5</version>
             </plugin>
-
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.12.1</version>
                 <configuration>
                     <release>21</release>
-                </configuration>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>3.3.0</version>
-                <configuration>
-                    <archive>
-                        <manifestEntries>
-                            <Standard-Version>L3RS-1.0.0</Standard-Version>
-                            <Conformance-Class>CROSSCHAIN</Conformance-Class>
-                        </manifestEntries>
-                    </archive>
                 </configuration>
             </plugin>
         </plugins>

@@ -1,29 +1,26 @@
 """
-l3rs1 — L3RS-1 Reference Implementation SDK
-Layer-3 Regulated Asset Standard v1.0.0 — CROSSCHAIN Conformance
+L3RS-1 Type Definitions — Python
+Maps directly to §13 Canonical Data Schema Specification.
 """
-from .types import *
-from .crypto import *
-from .modules import *
+from __future__ import annotations
 
-SDK_VERSION       = "1.0.0"
-STANDARD_VERSION  = "L3RS-1.0.0"
-CONFORMANCE_CLASS = "CROSSCHAIN"
-```
+from dataclasses import dataclass, field
+from enum import Enum
+from typing import Optional
 
 
-# ─── §2.3 Asset Type ──────────────────────────────────────────────────────────
+# ── §2.3 Asset Type ──────────────────────────────────────────────────────────
 
 class AssetType(str, Enum):
-    CBDC               = "CBDC"
-    INDUSTRY_STABLE    = "INDUSTRY_STABLE"
-    REGULATED_SECURITY = "REGULATED_SECURITY"
-    UTILITY            = "UTILITY"
-    GOVERNANCE         = "GOVERNANCE"
-    STORAGE_BACKED     = "STORAGE_BACKED"
+    CBDC                = "CBDC"
+    INDUSTRY_STABLE     = "INDUSTRY_STABLE"
+    REGULATED_SECURITY  = "REGULATED_SECURITY"
+    UTILITY             = "UTILITY"
+    GOVERNANCE          = "GOVERNANCE"
+    STORAGE_BACKED      = "STORAGE_BACKED"
 
 
-# ─── §2.4 Asset State ─────────────────────────────────────────────────────────
+# ── §2.4 Asset State ─────────────────────────────────────────────────────────
 
 class AssetState(str, Enum):
     ISSUED     = "ISSUED"
@@ -34,17 +31,20 @@ class AssetState(str, Enum):
     REDEEMED   = "REDEEMED"
     BURNED     = "BURNED"
 
+    def is_terminal(self) -> bool:
+        return self == AssetState.BURNED
 
-# ─── §3.2 Identity Requirement Level ─────────────────────────────────────────
+
+# ── §3.2 Identity Level ──────────────────────────────────────────────────────
 
 class IdentityLevel(int, Enum):
-    UNBOUND             = 0
-    VERIFIED            = 1
-    SOVEREIGN_VALIDATED = 2
-    MULTI_JURISDICTION  = 3
+    UNBOUND              = 0
+    VERIFIED             = 1
+    SOVEREIGN_VALIDATED  = 2
+    MULTI_JURISDICTION   = 3
 
 
-# ─── §3.6 Identity Status ─────────────────────────────────────────────────────
+# ── §3.6 Identity Status ─────────────────────────────────────────────────────
 
 class IdentityStatus(str, Enum):
     VALID   = "VALID"
@@ -53,21 +53,21 @@ class IdentityStatus(str, Enum):
     UNKNOWN = "UNKNOWN"
 
 
-# ─── §4.4 Rule Types ──────────────────────────────────────────────────────────
+# ── §4.4 Rule Type ───────────────────────────────────────────────────────────
 
 class RuleType(str, Enum):
-    TRANSFER_ELIGIBILITY    = "TRANSFER_ELIGIBILITY"
+    TRANSFER_ELIGIBILITY   = "TRANSFER_ELIGIBILITY"
     INVESTOR_CLASSIFICATION = "INVESTOR_CLASSIFICATION"
-    HOLDING_PERIOD          = "HOLDING_PERIOD"
-    GEOGRAPHIC_RESTRICTION  = "GEOGRAPHIC_RESTRICTION"
-    SANCTIONS_SCREENING     = "SANCTIONS_SCREENING"
-    TRANSACTION_THRESHOLD   = "TRANSACTION_THRESHOLD"
-    AML_TRIGGER             = "AML_TRIGGER"
-    MARKET_RESTRICTION      = "MARKET_RESTRICTION"
-    REDEMPTION_ELIGIBILITY  = "REDEMPTION_ELIGIBILITY"
+    HOLDING_PERIOD         = "HOLDING_PERIOD"
+    GEOGRAPHIC_RESTRICTION = "GEOGRAPHIC_RESTRICTION"
+    SANCTIONS_SCREENING    = "SANCTIONS_SCREENING"
+    TRANSACTION_THRESHOLD  = "TRANSACTION_THRESHOLD"
+    AML_TRIGGER            = "AML_TRIGGER"
+    MARKET_RESTRICTION     = "MARKET_RESTRICTION"
+    REDEMPTION_ELIGIBILITY = "REDEMPTION_ELIGIBILITY"
 
 
-# ─── §4.7 Enforcement Actions ─────────────────────────────────────────────────
+# ── §4.7 Enforcement Action ──────────────────────────────────────────────────
 
 class EnforcementAction(str, Enum):
     REJECT             = "REJECT"
@@ -76,8 +76,12 @@ class EnforcementAction(str, Enum):
     FLAG               = "FLAG"
     REQUIRE_DISCLOSURE = "REQUIRE_DISCLOSURE"
 
+    def is_blocking(self) -> bool:
+        return self in (EnforcementAction.REJECT, EnforcementAction.FREEZE,
+                        EnforcementAction.RESTRICT)
 
-# ─── §5.3 Governance Actions ──────────────────────────────────────────────────
+
+# ── §5.3 Governance Action ───────────────────────────────────────────────────
 
 class GovernanceAction(str, Enum):
     FREEZE_BALANCE     = "FREEZE_BALANCE"
@@ -88,7 +92,7 @@ class GovernanceAction(str, Enum):
     EMERGENCY_ROLLBACK = "EMERGENCY_ROLLBACK"
 
 
-# ─── §7.5 Backing Types ───────────────────────────────────────────────────────
+# ── §7.5 Backing Type ────────────────────────────────────────────────────────
 
 class BackingType(str, Enum):
     FIAT        = "FIAT"
@@ -100,7 +104,7 @@ class BackingType(str, Enum):
     MIXED       = "MIXED"
 
 
-# ─── §7.7 Attestation Frequency ──────────────────────────────────────────────
+# ── §7.7 Attestation Frequency ───────────────────────────────────────────────
 
 class AttestationFrequency(str, Enum):
     REALTIME  = "REALTIME"
@@ -110,8 +114,18 @@ class AttestationFrequency(str, Enum):
     QUARTERLY = "QUARTERLY"
     ANNUAL    = "ANNUAL"
 
+    def to_seconds(self) -> int:
+        return {
+            AttestationFrequency.REALTIME:  60,
+            AttestationFrequency.DAILY:     86_400,
+            AttestationFrequency.WEEKLY:    604_800,
+            AttestationFrequency.MONTHLY:   2_592_000,
+            AttestationFrequency.QUARTERLY: 7_776_000,
+            AttestationFrequency.ANNUAL:    31_536_000,
+        }[self]
 
-# ─── §7.8 Reserve Status ──────────────────────────────────────────────────────
+
+# ── §7.8 Reserve Status ──────────────────────────────────────────────────────
 
 class ReserveStatus(str, Enum):
     VALID   = "VALID"
@@ -120,7 +134,7 @@ class ReserveStatus(str, Enum):
     UNKNOWN = "UNKNOWN"
 
 
-# ─── §7.11 Insolvency Priority ────────────────────────────────────────────────
+# ── §7.11 Insolvency Priority ────────────────────────────────────────────────
 
 class InsolvencyPriority(str, Enum):
     SENIOR       = "SENIOR"
@@ -129,44 +143,42 @@ class InsolvencyPriority(str, Enum):
     SUBORDINATED = "SUBORDINATED"
 
 
-# ─── §3.8 ZK Proof ───────────────────────────────────────────────────────────
+# ── §3.8 ZK Proof ────────────────────────────────────────────────────────────
 
 @dataclass(frozen=True)
 class ZKProof:
-    scheme:             str
-    statement:          str
-    witness_commitment: str
-    proof_bytes:        str  # hex
-    nonce:              str
+    scheme:              str
+    statement:           str
+    witness_commitment:  str
+    proof_bytes:         str  # hex
+    nonce:               str
 
 
-# ─── §3.3 Identity Record ─────────────────────────────────────────────────────
+# ── §3.3 Identity Record ─────────────────────────────────────────────────────
 
 @dataclass(frozen=True)
 class IdentityRecord:
-    """IR = (HID, VA, JI, EXP, REV, ATTR, PROOF) — §3.3"""
-    identity_hash:            str               # HID
-    verification_authority:   str               # VA
-    jurisdiction_identity:    str               # JI: ISO 3166-1 alpha-2
-    expiry:                   int               # EXP: UTC Unix timestamp
-    revoked:                  bool              # REV
-    attribute_commitments:    tuple[str, ...] = field(default_factory=tuple)
-    proof:                    Optional[ZKProof] = None
+    identity_hash:          str
+    verification_authority: str
+    jurisdiction_identity:  str
+    expiry:                 int
+    revoked:                bool
+    attribute_commitments:  tuple[str, ...] = field(default_factory=tuple)
+    proof:                  Optional[ZKProof] = None
 
 
-# ─── §12.2 Legal Mirror ───────────────────────────────────────────────────────
+# ── §12.2 Legal Mirror ───────────────────────────────────────────────────────
 
 @dataclass(frozen=True)
 class LegalMirror:
-    """L = (J, LH, LV, TS, SIGN) — §12.2"""
-    jurisdiction:       str           # ISO 3166-1 alpha-2
-    legal_hash:         str           # LH
-    legal_version:      str           # LV: MAJOR.MINOR
-    timestamp:          int           # UTC Unix
+    jurisdiction:        str
+    legal_hash:          str
+    legal_version:       str
+    timestamp:           int
     authority_signature: Optional[str] = None
 
 
-# ─── §13.5 Compliance Rule ────────────────────────────────────────────────────
+# ── §13.5 Compliance Rule ────────────────────────────────────────────────────
 
 @dataclass(frozen=True)
 class ComplianceRule:
@@ -176,7 +188,7 @@ class ComplianceRule:
     trigger:   str
     priority:  int
     action:    EnforcementAction
-    params:    dict[str, object] = field(default_factory=dict)
+    params:    dict = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -184,30 +196,29 @@ class ComplianceModule:
     rules: tuple[ComplianceRule, ...]
 
 
-# ─── §13.6 Governance Module ─────────────────────────────────────────────────
+# ── §13.6 Governance Module ──────────────────────────────────────────────────
 
 @dataclass(frozen=True)
 class GovernanceModule:
     authorities:      tuple[str, ...]
-    quorum_threshold: int                          # integer percentage e.g. 67
+    quorum_threshold: int
     override_types:   tuple[GovernanceAction, ...]
 
 
-# ─── §5.2 Override Object ────────────────────────────────────────────────────
+# ── §5.2 Override Object ────────────────────────────────────────────────────
 
 @dataclass(frozen=True)
 class OverrideObject:
-    """O = (OID, AUTH, ACTION, TARGET, BASIS, TS, SIG) — §5.2"""
-    override_id:  str
-    authority:    str
-    action:       GovernanceAction
-    target:       str
-    legal_basis:  str
-    timestamp:    int
-    signature:    str
+    override_id: str
+    authority:   str
+    action:      GovernanceAction
+    target:      str
+    legal_basis: str
+    timestamp:   int
+    signature:   str
 
 
-# ─── §13.7 Fee Module ────────────────────────────────────────────────────────
+# ── §13.7 Fee Module ─────────────────────────────────────────────────────────
 
 @dataclass(frozen=True)
 class FeeAllocation:
@@ -221,19 +232,18 @@ class FeeModule:
     allocations:            tuple[FeeAllocation, ...]
 
 
-# ─── §13.8 Reserve Interface ─────────────────────────────────────────────────
+# ── §13.8 Reserve Interface ──────────────────────────────────────────────────
 
 @dataclass(frozen=True)
 class RedemptionLogic:
-    eligibility:    str
-    procedure:      str
-    settlement:     str
-    timeframe_sec:  int
+    eligibility:   str
+    procedure:     str
+    settlement:    str
+    timeframe_sec: int
 
 
 @dataclass(frozen=True)
 class ReserveInterface:
-    """B = (CID, ABT, AH, FREQ, RLOG, PRIORITY) — §7.3"""
     custodian_id:           str
     backing_type:           BackingType
     audit_hash:             str
@@ -242,47 +252,46 @@ class ReserveInterface:
     redemption_logic:       RedemptionLogic
 
 
-# ─── §13.9 Cross-Chain Metadata ──────────────────────────────────────────────
+# ── §13.9 Cross-Chain Metadata ───────────────────────────────────────────────
 
 @dataclass(frozen=True)
 class CrossChainMetadata:
-    certificate_id:   str
-    origin_chain_id:  str
-    compliance_hash:  str
-    governance_hash:  str
-    state_hash:       str
-    timestamp:        int
+    certificate_id:  str
+    origin_chain_id: str
+    compliance_hash: str
+    governance_hash: str
+    state_hash:      str
+    timestamp:       int
 
 
-# ─── §13.2 Canonical Asset Object ────────────────────────────────────────────
+# ── §13.2 Asset ──────────────────────────────────────────────────────────────
 
 @dataclass(frozen=True)
 class Asset:
-    """A = (I, T, J, L, ID, C, R, G, F, B, X, S) — §2.1"""
-    asset_id:           str
-    asset_type:         AssetType
-    jurisdiction:       str
-    legal_mirror:       LegalMirror
-    identity_level:     IdentityLevel
-    compliance_module:  ComplianceModule
-    governance_module:  GovernanceModule
-    fee_module:         FeeModule
+    asset_id:            str
+    asset_type:          AssetType
+    jurisdiction:        str
+    legal_mirror:        LegalMirror
+    identity_level:      IdentityLevel
+    compliance_module:   ComplianceModule
+    governance_module:   GovernanceModule
+    fee_module:          FeeModule
     crosschain_metadata: CrossChainMetadata
-    state:              AssetState
-    standard_version:   str
-    reserve_interface:  Optional[ReserveInterface] = None
+    state:               AssetState
+    standard_version:    str
+    reserve_interface:   Optional[ReserveInterface] = None
 
 
-# ─── Transfer ─────────────────────────────────────────────────────────────────
+# ── Transfer ─────────────────────────────────────────────────────────────────
 
 @dataclass(frozen=True)
 class TransferEvent:
     asset_id:  str
     sender:    str
     receiver:  str
-    amount:    int        # use int for arbitrary precision (equivalent to bigint)
-    nonce:     str        # hex
-    timestamp: int        # UTC Unix
+    amount:    int
+    nonce:     str
+    timestamp: int
 
 
 @dataclass(frozen=True)
@@ -293,7 +302,7 @@ class SettlementProof:
     timestamp:    int
 
 
-# ─── Compliance Decision ──────────────────────────────────────────────────────
+# ── Compliance Decision ──────────────────────────────────────────────────────
 
 @dataclass(frozen=True)
 class ComplianceDecision:

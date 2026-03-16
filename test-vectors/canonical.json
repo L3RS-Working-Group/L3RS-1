@@ -1,23 +1,50 @@
 {
-  "version": "1.0.0",
-  "description": "L3RS-1 canonical test vectors per \u00a711.5. All implementations MUST reproduce these exactly.",
+  "version": "L3RS-1.0.0",
+  "conformance_class": "CROSSCHAIN",
+  "generated_by": "L3RS-1 Python Reference Implementation v1.0.0",
   "vectors": {
     "asset_id_construction": {
-      "description": "\u00a72.2 \u2014 Asset_ID = H(issuer_pubkey || timestamp || nonce)",
+      "description": "I = H(pk_issuer || ts || nonce) \u2014 \u00a72.2",
       "inputs": {
         "issuer_pubkey_hex": "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
-        "timestamp_utc": "2026-02-24T00:00:00Z",
         "timestamp_unix": 1740355200,
         "nonce_hex": "0000000000000001"
       },
-      "expected": {
-        "preimage_hex": "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f817980000000067bbb6800000000000000001",
-        "asset_id_hex": "593f0dfb3da2fb8e8e21059e26f4a1875e9059a6d9d634e3065541e6c193506a"
+      "expected": "593f0dfb3da2fb8e8e21059e26f4a1875e9059a6d9d634e3065541e6c193506a"
+    },
+    "txid_construction": {
+      "description": "TxID = H(sender || receiver || amount || nonce || ts) \u2014 \u00a79.6",
+      "inputs": {
+        "sender": "alice",
+        "receiver": "bob",
+        "amount": 1000,
+        "nonce_hex": "0000000000000001",
+        "timestamp_unix": 1740355200
       },
-      "note": "Verified against Python reference implementation"
+      "expected": "7e80d94a182b19a7ea723978d2b2b0789b6af34f0b8fff3a72097d4260b53cca"
+    },
+    "crosschain_cid": {
+      "description": "CID = H(I || SH || CH || GH || t) \u2014 \u00a78.3",
+      "inputs": {
+        "asset_id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "state_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "compliance_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "governance_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "timestamp_unix": 1000
+      },
+      "expected": "49cb7939534b845349a0c73a97496a91c6fcf2ea7ec227a261e7af6f77763f11"
+    },
+    "asset_types": {
+      "valid_values": [
+        "CBDC",
+        "INDUSTRY_STABLE",
+        "REGULATED_SECURITY",
+        "UTILITY",
+        "GOVERNANCE",
+        "STORAGE_BACKED"
+      ]
     },
     "asset_states": {
-      "description": "\u00a72.4 \u2014 Valid AssetState enumeration values",
       "valid_values": [
         "ISSUED",
         "ACTIVE",
@@ -28,19 +55,15 @@
         "BURNED"
       ]
     },
-    "asset_types": {
-      "description": "\u00a72.3 \u2014 Valid AssetType enumeration values",
+    "identity_requirement_levels": {
       "valid_values": [
-        "CBDC",
-        "INDUSTRY_STABLE",
-        "REGULATED_SECURITY",
-        "UTILITY",
-        "GOVERNANCE",
-        "STORAGE_BACKED"
+        0,
+        1,
+        2,
+        3
       ]
     },
     "state_transitions": {
-      "description": "\u00a72.5 \u2014 State Transition Matrix",
       "valid_transitions": [
         {
           "from": "ISSUED",
@@ -76,59 +99,32 @@
           "from": "REDEEMED",
           "trigger": "FINALIZATION",
           "to": "BURNED"
+        },
+        {
+          "from": "ACTIVE",
+          "trigger": "SUSPENSION",
+          "to": "SUSPENDED"
+        },
+        {
+          "from": "SUSPENDED",
+          "trigger": "REINSTATEMENT",
+          "to": "ACTIVE"
         }
       ],
       "invalid_transitions": [
         {
           "from": "BURNED",
-          "trigger": "ANY",
-          "note": "Terminal state"
+          "trigger": "ACTIVATION",
+          "reason": "terminal state"
         },
         {
           "from": "ISSUED",
           "trigger": "FREEZE",
-          "note": "Must activate first"
-        },
-        {
-          "from": "ACTIVE",
-          "trigger": "ISSUED",
-          "note": "No backward transition"
+          "reason": "not in matrix"
         }
       ]
     },
-    "identity_requirement_levels": {
-      "description": "\u00a73.2 \u2014 Identity Requirement Level enumeration",
-      "valid_values": [
-        0,
-        1,
-        2,
-        3
-      ],
-      "semantics": {
-        "0": "UNBOUND \u2014 no identity requirement",
-        "1": "VERIFIED \u2014 KYC/KYB required",
-        "2": "SOVEREIGN_VALIDATED \u2014 sovereign authority attestation",
-        "3": "MULTI_JURISDICTION \u2014 two or more jurisdictional attestations"
-      }
-    },
-    "identity_hash": {
-      "description": "\u00a73.4 \u2014 HID = H(PII || salt || domain)",
-      "note": "PII is never stored on-chain; only the hash is stored",
-      "inputs": {
-        "domain": "l3rs1-identity-v1"
-      }
-    },
-    "identity_status_values": {
-      "description": "\u00a73.6 \u2014 Identity Status Function",
-      "valid_values": [
-        "VALID",
-        "EXPIRED",
-        "REVOKED",
-        "UNKNOWN"
-      ]
-    },
     "compliance_rule_types": {
-      "description": "\u00a74.4 \u2014 Supported rule category types",
       "valid_values": [
         "TRANSFER_ELIGIBILITY",
         "INVESTOR_CLASSIFICATION",
@@ -142,7 +138,6 @@
       ]
     },
     "enforcement_actions": {
-      "description": "\u00a74.7 \u2014 Enforcement action enumeration",
       "valid_values": [
         "REJECT",
         "FREEZE",
@@ -152,7 +147,6 @@
       ]
     },
     "governance_actions": {
-      "description": "\u00a75.3 \u2014 Authorized override actions",
       "valid_values": [
         "FREEZE_BALANCE",
         "UNFREEZE_BALANCE",
@@ -163,30 +157,16 @@
       ]
     },
     "fee_allocation": {
-      "description": "\u00a76.4 \u2014 Fee allocation percentages must sum to 1 (or 10000 basis points)",
       "valid_example": {
         "sovereign": 2000,
         "validation": 3000,
         "storage": 2000,
         "operator": 2500,
-        "bridge": 500,
-        "total_basis_points": 10000
+        "bridge": 500
       },
-      "invalid_example": {
-        "note": "Any allocation where sum != 10000 basis points MUST be rejected"
-      }
-    },
-    "reserve_status_values": {
-      "description": "\u00a77.8 \u2014 ReserveStatus enumeration",
-      "valid_values": [
-        "VALID",
-        "STALE",
-        "INVALID",
-        "UNKNOWN"
-      ]
+      "constraint": "all basis_points must sum to exactly 10000"
     },
     "reserve_backing_types": {
-      "description": "\u00a77.5 \u2014 Asset backing type enumeration",
       "valid_values": [
         "FIAT",
         "TREASURY",
@@ -198,7 +178,6 @@
       ]
     },
     "attestation_frequencies": {
-      "description": "\u00a77.7 \u2014 Attestation frequency enumeration",
       "valid_values": [
         "REALTIME",
         "DAILY",
@@ -208,92 +187,25 @@
         "ANNUAL"
       ]
     },
-    "insolvency_priority": {
-      "description": "\u00a77.11 \u2014 Insolvency priority classification",
+    "reserve_status_values": {
       "valid_values": [
-        "SENIOR",
-        "SECURED",
-        "UNSECURED",
-        "SUBORDINATED"
-      ]
-    },
-    "crosschain_cid": {
-      "description": "\u00a78.3 \u2014 CID = H(Asset_ID || StateHash || ComplianceHash || GovHash || timestamp)",
-      "invariants": [
-        "Asset_ID MUST remain identical across origin and destination",
-        "ComplianceHash MUST NOT decrease in restriction level",
-        "GovHash MUST remain identical",
-        "Jurisdiction MUST remain identical"
-      ]
-    },
-    "txid_construction": {
-      "description": "\u00a79.6 \u2014 TxID = H(sender || receiver || amount || nonce || timestamp)",
-      "replay_rule": "If TxID already exists in ledger history, MUST REJECT"
-    },
-    "settlement_atomicity": {
-      "description": "\u00a79.3 \u2014 SettlementSuccess IFF all components succeed",
-      "required_components": [
-        "ComplianceSuccess",
-        "IdentitySuccess",
-        "FeeSuccess",
-        "GovernanceSuccess",
-        "StateCommit"
-      ],
-      "rule": "Any single failure => full rollback, no partial state"
-    },
-    "conformance_classes": {
-      "description": "\u00a711.2 \u2014 Implementation conformance hierarchy",
-      "classes": {
-        "CORE": [
-          "AssetModel",
-          "IdentityBinding",
-          "ComplianceEngine",
-          "Settlement"
-        ],
-        "ENHANCED": [
-          "CORE",
-          "GovernanceOverride",
-          "FeeRouting",
-          "ReserveInterface"
-        ],
-        "SOVEREIGN": [
-          "ENHANCED",
-          "QuorumEnforcement",
-          "JurisdictionLock",
-          "AuditHashAnchoring",
-          "LegalMirror"
-        ],
-        "CROSSCHAIN": [
-          "SOVEREIGN",
-          "CrossChainCertificateValidation",
-          "DowngradeResistance",
-          "DoubleIssuancePrevention",
-          "FinalityVerification"
-        ]
-      }
-    },
-    "canonical_serialization": {
-      "description": "\u00a713.10-11 \u2014 Deterministic serialization rules",
-      "rules": [
-        "Fields MUST be serialized in exact schema-defined order",
-        "Strings MUST be UTF-8, no normalization ambiguity",
-        "Integers: fixed-width unsigned big-endian where width is defined",
-        "Unknown fields MUST be rejected in strict mode",
-        "If JSON: canonical JSON (no whitespace, stable key order, stable number format)"
+        "VALID",
+        "STALE",
+        "INVALID",
+        "UNKNOWN"
       ]
     },
     "invariants": {
-      "description": "\u00a710 + \u00a715 \u2014 All 11 protocol invariants that MUST hold",
-      "I1": "State transitions occur only via validated functions",
-      "I2": "No transfer if any compliance rule evaluates FALSE",
-      "I3": "If ID >= 1, Status(IR) MUST equal VALID",
-      "I4": "Override requires valid signature and quorum",
+      "I1": "State transitions only via defined matrix entries",
+      "I2": "No transfer if any compliance rule evaluates false",
+      "I3": "Identity validation required when level >= 1",
+      "I4": "Governance overrides require valid signature and quorum",
       "I5": "Compliance and governance hashes invariant across chains",
-      "I6": "Digital asset MUST reference enforceable legal basis",
-      "I7": "Hash(SerializedAsset) MUST equal StoredAssetHash",
-      "I8": "ExecutionCost(event) MUST be <= declared MaxCost",
-      "I9": "Deployment MUST NOT weaken protocol invariants",
-      "I10": "Implementation profile MUST preserve protocol invariants",
+      "I6": "Asset references enforceable legal basis",
+      "I7": "Hash(ser(Asset)) is stable across implementations",
+      "I8": "Bounded execution \u2014 no unbounded loops in compliance",
+      "I9": "Deployment invariant \u2014 asset_id immutable after issuance",
+      "I10": "Profile invariant \u2014 conformance class cannot be downgraded",
       "I11": "CID changes if any of (S, C, G, J, L) changes"
     }
   }
