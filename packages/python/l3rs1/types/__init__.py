@@ -1,13 +1,15 @@
 """
-L3RS-1 Type Definitions — Python
-Maps directly to §13 Canonical Data Schema Specification.
-Mirrors the TypeScript types package exactly.
+l3rs1 — L3RS-1 Reference Implementation SDK
+Layer-3 Regulated Asset Standard v1.0.0 — CROSSCHAIN Conformance
 """
-from __future__ import annotations
+from .types import *
+from .crypto import *
+from .modules import *
 
-from dataclasses import dataclass, field
-from enum import Enum
-from typing import Optional
+SDK_VERSION       = "1.0.0"
+STANDARD_VERSION  = "L3RS-1.0.0"
+CONFORMANCE_CLASS = "CROSSCHAIN"
+```
 
 
 # ─── §2.3 Asset Type ──────────────────────────────────────────────────────────
