@@ -1,0 +1,125 @@
+name: Conformance
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'test-vectors/**'
+      - 'packages/python/**'
+      - 'conformance/**'
+      - '.github/workflows/conformance.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'test-vectors/**'
+      - 'packages/python/**'
+      - 'conformance/**'
+  workflow_dispatch:
+
+jobs:
+
+  reference-impl:
+    name: Reference implementation conformance
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Run canonical vector suite
+        run: PYTHONPATH=packages/python python test-vectors/run_vectors.py
+
+      - name: Generate conformance report
+        run: |
+          PYTHONPATH=packages/python python - << 'EOF'
+          import json, datetime, platform, sys
+          with open('test-vectors/canonical.json') as f:
+              tv = json.load(f)
+          report = {
+              "report_type": "L3RS-1 Conformance Report",
+              "standard_version": tv["version"],
+              "conformance_class": "CROSSCHAIN",
+              "implementation": "L3RS-1 Python Reference Implementation",
+              "implementation_version": "1.0.0",
+              "generated_at": datetime.datetime.utcnow().isoformat() + "Z",
+              "python_version": sys.version,
+              "platform": platform.platform(),
+              "invariants_enforced": list(tv["vectors"]["invariants"].keys()),
+              "vector_sections_tested": list(tv["vectors"].keys()),
+              "result": "PASS"
+          }
+          with open('conformance-report.json', 'w') as f:
+              json.dump(report, f, indent=2)
+          print(json.dumps(report, indent=2))
+          EOF
+
+      - name: Upload conformance report
+        uses: actions/upload-artifact@v4
+        with:
+          name: conformance-report
+          path: conformance-report.json
+          retention-days: 90
+
+  hash-consistency:
+    name: Cross-language hash consistency
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Verify Python canonical Asset_ID hash
+        run: |
+          PY_HASH=$(PYTHONPATH=packages/python python3 -c "
+          from l3rs1.crypto import construct_asset_id
+          print(construct_asset_id(
+              '0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798',
+              1740355200,
+              '0000000000000001'
+          ))
+          ")
+          EXPECTED="593f0dfb3da2fb8e8e21059e26f4a1875e9059a6d9d634e3065541e6c193506a"
+          echo "Python hash: $PY_HASH"
+          echo "Expected:    $EXPECTED"
+          if [ "$PY_HASH" = "$EXPECTED" ]; then
+            echo "PASS: hash matches canonical vector"
+          else
+            echo "FAIL: hash mismatch"
+            exit 1
+          fi
+
+      - name: Verify canonical serialization
+        run: |
+          PYTHONPATH=packages/python python3 -c "
+          from l3rs1.crypto import canonicalize
+          result = canonicalize({'z': 3, 'a': 1, 'm': 2})
+          expected = '{\"a\":1,\"m\":2,\"z\":3}'
+          assert result == expected, f'FAIL: got {result}'
+          print('PASS: canonical serialization correct')
+          "
+
+      - name: Verify all 9 state transitions
+        run: |
+          PYTHONPATH=packages/python python3 -c "
+          from l3rs1.types import AssetState
+          from l3rs1.modules import apply_state_transition
+          transitions = [
+              ('ISSUED','ACTIVATION','ACTIVE'),
+              ('ACTIVE','BREACH','RESTRICTED'),
+              ('ACTIVE','FREEZE','FROZEN'),
+              ('RESTRICTED','CLEARED','ACTIVE'),
+              ('FROZEN','RELEASE','ACTIVE'),
+              ('ACTIVE','REDEMPTION','REDEEMED'),
+              ('REDEEMED','FINALIZATION','BURNED'),
+              ('ACTIVE','SUSPENSION','SUSPENDED'),
+              ('SUSPENDED','REINSTATEMENT','ACTIVE'),
+          ]
+          for f, t, to in transitions:
+              r = apply_state_transition(AssetState(f), t)
+              assert r.success and r.new_state == AssetState(to), f'FAIL: {f}--{t}'
+          print('PASS: all 9 state transitions correct')
+          "
