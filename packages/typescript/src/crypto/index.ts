@@ -1,11 +1,14 @@
 /**
- * L3RS-1 Cryptographic Primitives — TypeScript
- * Pure implementation using SubtleCrypto (available in Node 18+ and browsers).
- * No external dependencies, no @types/node required.
+ * @module crypto
+ * @description L3RS-1 cryptographic primitives — §13.10–11, §10.3.
+ *
+ * Pure TypeScript SHA-256 implementation — zero external dependencies,
+ * runs in Node.js, browsers, and edge runtimes without `@types/node`.
  */
 
-// ── Utilities ────────────────────────────────────────────────────────────────
+// ── Utilities ─────────────────────────────────────────────────────────────────
 
+/** Decode a lowercase hex string to a Uint8Array. */
 export function fromHex(hex: string): Uint8Array {
   const arr = new Uint8Array(hex.length / 2);
   for (let i = 0; i < hex.length; i += 2)
@@ -13,17 +16,14 @@ export function fromHex(hex: string): Uint8Array {
   return arr;
 }
 
+/** Encode a string to UTF-8 bytes without TextEncoder. */
 export function fromUtf8(s: string): Uint8Array {
   const bytes: number[] = [];
   for (let i = 0; i < s.length; i++) {
-    let code = s.charCodeAt(i);
-    if (code < 0x80) {
-      bytes.push(code);
-    } else if (code < 0x800) {
-      bytes.push(0xc0 | (code >> 6), 0x80 | (code & 0x3f));
-    } else {
-      bytes.push(0xe0|(code>>12), 0x80|((code>>6)&0x3f), 0x80|(code&0x3f));
-    }
+    const c = s.charCodeAt(i);
+    if (c < 0x80) bytes.push(c);
+    else if (c < 0x800) bytes.push(0xc0 | (c >> 6), 0x80 | (c & 0x3f));
+    else bytes.push(0xe0 | (c >> 12), 0x80 | ((c >> 6) & 0x3f), 0x80 | (c & 0x3f));
   }
   return new Uint8Array(bytes);
 }
@@ -54,7 +54,7 @@ function concat(...parts: Uint8Array[]): Uint8Array {
   return out;
 }
 
-// ── SHA-256 (RFC 6234 / FIPS 180-4) ─────────────────────────────────────────
+// ── SHA-256 (FIPS 180-4) ─────────────────────────────────────────────────────
 
 const K = new Uint32Array([
   0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,
@@ -69,16 +69,16 @@ const K = new Uint32Array([
 
 function rotr(x: number, n: number): number { return (x >>> n) | (x << (32 - n)); }
 
+/** Raw SHA-256 — returns 32-byte Uint8Array. */
 export function sha256raw(data: Uint8Array): Uint8Array {
   const msgLen = data.length;
-  const bitLen = msgLen * 8;
   const paddedLen = Math.ceil((msgLen + 9) / 64) * 64;
   const padded = new Uint8Array(paddedLen);
   padded.set(data);
   padded[msgLen] = 0x80;
-  const view = new DataView(padded.buffer);
-  view.setUint32(paddedLen - 4, bitLen & 0xffffffff, false);
-  view.setUint32(paddedLen - 8, Math.floor(bitLen / 2**32), false);
+  const dv = new DataView(padded.buffer);
+  dv.setUint32(paddedLen - 4, (msgLen * 8) & 0xffffffff, false);
+  dv.setUint32(paddedLen - 8, Math.floor((msgLen * 8) / 2 ** 32), false);
 
   let [h0,h1,h2,h3,h4,h5,h6,h7] = [
     0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,
@@ -87,7 +87,7 @@ export function sha256raw(data: Uint8Array): Uint8Array {
 
   for (let i = 0; i < paddedLen; i += 64) {
     const w = new Uint32Array(64);
-    for (let j = 0; j < 16; j++) w[j] = view.getUint32(i + j * 4, false);
+    for (let j = 0; j < 16; j++) w[j] = dv.getUint32(i + j * 4, false);
     for (let j = 16; j < 64; j++) {
       const s0 = rotr(w[j-15]!,7) ^ rotr(w[j-15]!,18) ^ (w[j-15]! >>> 3);
       const s1 = rotr(w[j-2]!,17) ^ rotr(w[j-2]!,19)  ^ (w[j-2]!  >>> 10);
@@ -95,12 +95,12 @@ export function sha256raw(data: Uint8Array): Uint8Array {
     }
     let [a,b,c,d,e,f,g,h] = [h0,h1,h2,h3,h4,h5,h6,h7];
     for (let j = 0; j < 64; j++) {
-      const S1   = rotr(e,6) ^ rotr(e,11) ^ rotr(e,25);
-      const ch   = (e & f) ^ (~e & g);
-      const t1   = (h + S1 + ch + K[j]! + w[j]!) >>> 0;
-      const S0   = rotr(a,2) ^ rotr(a,13) ^ rotr(a,22);
-      const maj  = (a & b) ^ (a & c) ^ (b & c);
-      const t2   = (S0 + maj) >>> 0;
+      const S1  = rotr(e,6) ^ rotr(e,11) ^ rotr(e,25);
+      const ch  = (e & f) ^ (~e & g);
+      const t1  = (h + S1 + ch + K[j]! + w[j]!) >>> 0;
+      const S0  = rotr(a,2) ^ rotr(a,13) ^ rotr(a,22);
+      const maj = (a & b) ^ (a & c) ^ (b & c);
+      const t2  = (S0 + maj) >>> 0;
       h=g; g=f; f=e; e=(d+t1)>>>0; d=c; c=b; b=a; a=(t1+t2)>>>0;
     }
     h0=(h0+a)>>>0; h1=(h1+b)>>>0; h2=(h2+c)>>>0; h3=(h3+d)>>>0;
@@ -112,11 +112,18 @@ export function sha256raw(data: Uint8Array): Uint8Array {
   return result;
 }
 
+/**
+ * SHA-256 of concatenated parts. Returns lowercase hex.
+ * @example sha256(fromHex(pubkey), ts, nonce)
+ */
 export function sha256(...parts: Uint8Array[]): string {
   return toHex(sha256raw(concat(...parts)));
 }
 
-/** §13.11 Canonical JSON: sorted keys, no whitespace */
+/**
+ * §13.11 — Canonical JSON serialization: recursively sorted keys, no whitespace.
+ * @example canonicalize({ z: 3, a: 1 }) // → '{"a":1,"z":3}'
+ */
 export function canonicalize(obj: unknown): string {
   return JSON.stringify(obj, (_key, value: unknown) => {
     if (value !== null && typeof value === "object" && !Array.isArray(value)) {
@@ -129,42 +136,66 @@ export function canonicalize(obj: unknown): string {
   });
 }
 
+/** H(ser(obj)) — hash of canonical JSON representation. */
 export function hashObject(obj: unknown): string {
   return sha256(fromUtf8(canonicalize(obj)));
 }
 
-/** §2.2 — I = H(pk_issuer || ts || nonce) */
+/**
+ * §2.2 — Asset_ID construction.
+ * `I = H(pk_issuer ∥ ts ∥ nonce)`
+ * @param pubkeyHex - Compressed public key (hex)
+ * @param timestampUnix - Issuance Unix timestamp
+ * @param nonceHex - 8-byte nonce (hex)
+ */
 export function constructAssetId(pubkeyHex: string, timestampUnix: number, nonceHex: string): string {
   return sha256(fromHex(pubkeyHex), toBigEndian8(timestampUnix), fromHex(nonceHex));
 }
 
-/** §8.3 — CID = H(I || SH || CH || GH || t) */
-export function constructCID(assetId: string, stateHash: string, complianceHash: string,
-                              governanceHash: string, timestampUnix: number): string {
-  return sha256(fromHex(assetId), fromHex(stateHash), fromHex(complianceHash),
-                fromHex(governanceHash), toBigEndian8(timestampUnix));
+/**
+ * §8.3 — Cross-Chain Certificate Identifier.
+ * `CID = H(I ∥ SH ∥ CH ∥ GH ∥ t)`
+ */
+export function constructCID(
+  assetId: string, stateHash: string, complianceHash: string,
+  governanceHash: string, timestampUnix: number,
+): string {
+  return sha256(
+    fromHex(assetId), fromHex(stateHash), fromHex(complianceHash),
+    fromHex(governanceHash), toBigEndian8(timestampUnix),
+  );
 }
 
-/** §9.6 — TxID = H(sender || receiver || amount || nonce || timestamp) */
-export function constructTxId(sender: string, receiver: string, amount: bigint,
-                               nonceHex: string, timestampUnix: number): string {
-  return sha256(fromUtf8(sender), fromUtf8(receiver),
-                amountTo32(amount), fromHex(nonceHex), toBigEndian8(timestampUnix));
+/**
+ * §9.6 — Transaction ID.
+ * `TxID = H(sender ∥ receiver ∥ amount ∥ nonce ∥ timestamp)`
+ */
+export function constructTxId(
+  sender: string, receiver: string, amount: bigint,
+  nonceHex: string, timestampUnix: number,
+): string {
+  return sha256(
+    fromUtf8(sender), fromUtf8(receiver),
+    amountTo32(amount), fromHex(nonceHex), toBigEndian8(timestampUnix),
+  );
 }
 
-/** §3.4 — HID = H(PII || salt || domain) */
+/** §3.4 — Identity hash. `HID = H(PII ∥ salt ∥ domain)` */
 export function constructIdentityHash(piiUtf8: string, saltHex: string, domain: string): string {
   return sha256(fromUtf8(piiUtf8), fromHex(saltHex), fromUtf8(domain));
 }
 
-/** §5.10 — Override_Record = H(OID || AUTH || ACTION || TS) */
-export function constructOverrideHash(overrideId: string, authority: string,
-                                       action: string, timestampUnix: number): string {
-  return sha256(fromUtf8(overrideId), fromUtf8(authority),
-                fromUtf8(action), toBigEndian8(timestampUnix));
+/** §5.10 — Override record hash. */
+export function constructOverrideHash(
+  overrideId: string, authority: string, action: string, timestampUnix: number,
+): string {
+  return sha256(
+    fromUtf8(overrideId), fromUtf8(authority),
+    fromUtf8(action), toBigEndian8(timestampUnix),
+  );
 }
 
-/** Abstract interface for signature verification per §10.3. */
+/** Abstract interface for EdDSA/ECDSA signature verification per §10.3. */
 export interface SignatureVerifier {
   verify(message: Uint8Array, signatureHex: string, publicKeyHex: string): boolean;
 }

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>L3RS-1 Solidity SDK — API Reference</title>
+<style>
+  :root{--accent:#2563eb;--bg:#f8fafc;--border:#e2e8f0;--code-bg:#1e293b}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:#1e293b;line-height:1.6}
+  nav{background:var(--code-bg);color:#fff;padding:0 2rem;display:flex;align-items:center;gap:2rem;height:56px}
+  nav a{color:#94a3b8;text-decoration:none;font-size:.9rem} nav a:hover{color:#fff}
+  nav .logo{color:#fff;font-weight:700;font-size:1.1rem;margin-right:auto}
+  .lang-bar{background:#fff;border-bottom:1px solid var(--border);padding:0 2rem;display:flex;gap:1rem;overflow-x:auto}
+  .lang-bar a{padding:.75rem 1rem;text-decoration:none;color:#64748b;font-size:.875rem;border-bottom:2px solid transparent;white-space:nowrap}
+  .lang-bar a.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+  .container{max-width:960px;margin:0 auto;padding:2rem}
+  h1{font-size:2rem;margin-bottom:.5rem}
+  h2{font-size:1.25rem;margin:2rem 0 1rem;padding-bottom:.5rem;border-bottom:1px solid var(--border)}
+  p{margin-bottom:1rem;color:#475569}
+  .badge{display:inline-block;background:#dbeafe;color:var(--accent);padding:.2rem .6rem;border-radius:4px;font-size:.8rem;font-weight:600;margin-bottom:1.5rem}
+  .install{background:var(--code-bg);color:#e2e8f0;padding:1rem 1.5rem;border-radius:8px;font-family:monospace;margin-bottom:2rem;font-size:.9rem}
+  pre{background:var(--code-bg);color:#e2e8f0;padding:1.25rem;border-radius:8px;overflow-x:auto;font-size:.875rem;margin:.5rem 0 1rem}
+  code{font-family:"SF Mono","Fira Code",monospace;font-size:.875rem}
+  table{width:100%;border-collapse:collapse;margin:1rem 0;font-size:.875rem}
+  th{background:#f1f5f9;padding:.6rem 1rem;text-align:left;font-weight:600}
+  td{padding:.6rem 1rem;border-top:1px solid var(--border)}
+  .note{background:#eff6ff;border-left:3px solid var(--accent);padding:.75rem 1rem;margin:1rem 0;border-radius:0 4px 4px 0;font-size:.9rem}
+</style>
+</head><body>
+<nav><span class="logo">L3RS-1 SDK</span>
+  <a href="../">Home</a>
+  <a href="https://github.com/L3RS-Foundation/L3RS-1">GitHub</a>
+  <a href="https://l3rs.foundation/specification">Specification</a>
+</nav>
+<div class="lang-bar">
+  <a href="../typescript/">TypeScript</a>
+  <a href="../python/">Python</a>
+  <a href="../go/">Go</a>
+  <a href="../rust/">Rust</a>
+  <a href="../java/">Java</a>
+  <a href="../solidity/" class="active">Solidity</a>
+</div>
+<div class="container">
+<h1>Solidity SDK</h1>
+<span class="badge">@l3rs/contracts - npm - Solidity 0.8.24</span>
+<div class="install">npm install @l3rs/contracts</div>
+<div class="note">EVM Profile A (SS17.2). Uses keccak256 as H() on-chain per SS10.3.</div>
+<h2>Quick Example</h2><pre><code>import "@l3rs/contracts/contracts/L3RS1Asset.sol";
+
+L3RS1Asset asset = new L3RS1Asset(issuerPubkey, 100, deployNonce);
+asset.activate();
+bytes32 txId = asset.transfer(receiver, 1000, transferNonce);
+(bool ok,) = asset.checkCompliance(sender, receiver, 1000);</code></pre>
+<h2>L3RS1Asset Functions</h2><table><tr><th>Function</th><th>SS</th><th>Description</th></tr><tr><td><code>assetId() view -&gt; bytes32</code></td><td>2.2</td><td>Immutable - keccak256(pk || ts || nonce)</td></tr><tr><td><code>currentState() view -&gt; AssetState</code></td><td>2.4</td><td>Lifecycle state enum</td></tr><tr><td><code>transfer(receiver, amount, nonce) -&gt; bytes32</code></td><td>9.6</td><td>Nonce-based replay protection</td></tr><tr><td><code>checkCompliance(sender, receiver, amount)</code></td><td>4.3</td><td>Returns (bool allowed, bytes32 rule)</td></tr><tr><td><code>crossChainCertificateId() view -&gt; bytes32</code></td><td>8.3</td><td>Current CID</td></tr></table>
+<h2>L3RS1Hashing Library</h2><table><tr><th>Function</th><th>SS</th><th>Description</th></tr><tr><td><code>constructAssetId(pubkey, ts, nonce)</code></td><td>2.2</td><td>keccak256(pk || ts || nonce)</td></tr><tr><td><code>constructCID(id, sh, ch, gh, ts)</code></td><td>8.3</td><td>keccak256(I || SH || CH || GH || t)</td></tr><tr><td><code>constructTxId(sender, receiver, amount, nonce, ts)</code></td><td>9.6</td><td>keccak256(all fields)</td></tr></table>
+<h2>State Transition Matrix</h2>
+<table><tr><th>From</th><th>Trigger</th><th>To</th></tr>
+<tr><td>ISSUED</td><td>ACTIVATION</td><td>ACTIVE</td></tr>
+<tr><td>ACTIVE</td><td>BREACH</td><td>RESTRICTED</td></tr>
+<tr><td>ACTIVE</td><td>FREEZE</td><td>FROZEN</td></tr>
+<tr><td>RESTRICTED</td><td>CLEARED</td><td>ACTIVE</td></tr>
+<tr><td>FROZEN</td><td>RELEASE</td><td>ACTIVE</td></tr>
+<tr><td>ACTIVE</td><td>REDEMPTION</td><td>REDEEMED</td></tr>
+<tr><td>REDEEMED</td><td>FINALIZATION</td><td>BURNED (terminal)</td></tr>
+<tr><td>ACTIVE</td><td>SUSPENSION</td><td>SUSPENDED</td></tr>
+<tr><td>SUSPENDED</td><td>REINSTATEMENT</td><td>ACTIVE</td></tr>
+</table>
+</div></body></html>

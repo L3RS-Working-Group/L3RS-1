@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>L3RS-1 Python SDK — API Reference</title>
+<style>
+  :root { --accent: #2563eb; --bg: #f8fafc; --card: #fff; --border: #e2e8f0; --code-bg: #1e293b; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--bg); color: #1e293b; line-height: 1.6; }
+  nav { background: var(--code-bg); color: #fff; padding: 0 2rem; display: flex; align-items: center; gap: 2rem; height: 56px; }
+  nav a { color: #94a3b8; text-decoration: none; font-size: 0.9rem; } nav a:hover { color: #fff; }
+  nav .logo { color: #fff; font-weight: 700; font-size: 1.1rem; margin-right: auto; }
+  .lang-bar { background: #fff; border-bottom: 1px solid var(--border); padding: 0 2rem; display: flex; gap: 1rem; overflow-x: auto; }
+  .lang-bar a { padding: 0.75rem 1rem; text-decoration: none; color: #64748b; font-size: 0.875rem; border-bottom: 2px solid transparent; white-space: nowrap; }
+  .lang-bar a.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+  .container { max-width: 960px; margin: 0 auto; padding: 2rem; }
+  h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+  h2 { font-size: 1.25rem; margin: 2rem 0 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); }
+  h3 { font-size: 1rem; color: var(--accent); margin: 1.5rem 0 0.5rem; font-family: "SF Mono", "Fira Code", monospace; }
+  p { margin-bottom: 1rem; color: #475569; }
+  .badge { display: inline-block; background: #dbeafe; color: var(--accent); padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.8rem; font-weight: 600; margin-bottom: 1.5rem; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem; margin-bottom: 1rem; }
+  .install { background: var(--code-bg); color: #e2e8f0; padding: 1rem 1.5rem; border-radius: 8px; font-family: monospace; margin-bottom: 2rem; }
+  pre { background: var(--code-bg); color: #e2e8f0; padding: 1.25rem; border-radius: 8px; overflow-x: auto; font-size: 0.875rem; margin: 0.5rem 0 1rem; }
+  code { font-family: "SF Mono", "Fira Code", monospace; font-size: 0.875rem; }
+  .inline-code { background: #f1f5f9; padding: 0.15rem 0.4rem; border-radius: 3px; font-family: monospace; font-size: 0.85rem; }
+  .sig { color: #7c3aed; }
+  .param { color: #0891b2; }
+  .ret { color: #059669; }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+  th { background: #f1f5f9; padding: 0.6rem 1rem; text-align: left; font-weight: 600; }
+  td { padding: 0.6rem 1rem; border-top: 1px solid var(--border); }
+  .section-note { background: #eff6ff; border-left: 3px solid var(--accent); padding: 0.75rem 1rem; margin: 1rem 0; border-radius: 0 4px 4px 0; font-size: 0.9rem; }
+</style>
+</head>
+<body>
+<nav>
+  <span class="logo">L3RS-1 SDK</span>
+  <a href="../">Home</a>
+  <a href="https://github.com/L3RS-Foundation/L3RS-1">GitHub</a>
+  <a href="https://l3rs.foundation/specification">Specification</a>
+</nav>
+<div class="lang-bar">
+  <a href="../typescript/">TypeScript</a>
+  <a href="." class="active">Python</a>
+  <a href="../go/">Go</a>
+  <a href="../rust/">Rust</a>
+  <a href="../java/">Java</a>
+  <a href="../solidity/">Solidity</a>
+</div>
+<div class="container">
+  <h1>Python SDK</h1>
+  <span class="badge">l3rs1-sdk · PyPI · Python 3.11+</span>
+  <div class="install">pip install l3rs1-sdk</div>
+
+  <div class="section-note">Zero runtime dependencies — pure Python stdlib. Import via <span class="inline-code">PYTHONPATH</span> or install from PyPI.</div>
+
+  <h2>Quick Example</h2>
+  <pre><code>from l3rs1.crypto import construct_asset_id, canonicalize
+from l3rs1.types import AssetState
+from l3rs1.modules import apply_state_transition
+
+asset_id = construct_asset_id(
+    issuer_pubkey_hex="0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
+    timestamp_unix=1740355200,
+    nonce_hex="0000000000000001",
+)
+# → "593f0dfb3da2fb8e8e21059e26f4a1875e9059a6d9d634e3065541e6c193506a"
+
+result = apply_state_transition(AssetState.ISSUED, "ACTIVATION")
+# → StateTransitionResult(success=True, new_state=AssetState.ACTIVE)</code></pre>
+
+  <h2>crypto — Hash Constructions</h2>
+
+  <h3><span class="sig">construct_asset_id</span>(<span class="param">issuer_pubkey_hex, timestamp_unix, nonce_hex</span>) → <span class="ret">str</span></h3>
+  <p>§2.2 — <code>I = H(pk_issuer ∥ ts ∥ nonce)</code>. Returns 64-char lowercase hex.</p>
+
+  <h3><span class="sig">construct_cid</span>(<span class="param">asset_id, state_hash, compliance_hash, governance_hash, timestamp_unix</span>) → <span class="ret">str</span></h3>
+  <p>§8.3 — <code>CID = H(I ∥ SH ∥ CH ∥ GH ∥ t)</code>.</p>
+
+  <h3><span class="sig">construct_tx_id</span>(<span class="param">sender, receiver, amount, nonce_hex, timestamp_unix</span>) → <span class="ret">str</span></h3>
+  <p>§9.6 — <code>TxID = H(sender ∥ receiver ∥ amount ∥ nonce ∥ timestamp)</code>.</p>
+
+  <h3><span class="sig">canonicalize</span>(<span class="param">obj</span>) → <span class="ret">str</span></h3>
+  <p>§13.11 — Canonical JSON: sorted keys, no whitespace, UTF-8.</p>
+
+  <h2>modules — Protocol Logic</h2>
+
+  <h3><span class="sig">apply_state_transition</span>(<span class="param">current: AssetState, trigger: str</span>) → <span class="ret">StateTransitionResult</span></h3>
+  <p>§2.5 — Deterministic state machine. Returns <span class="inline-code">StateTransitionResult(success, new_state, error)</span>. Enforces Invariant I₁.</p>
+
+  <h3><span class="sig">evaluate_compliance</span>(<span class="param">module, ctx</span>) → <span class="ret">ComplianceDecision</span></h3>
+  <p>§4.3 — <code>C: E → {0,1}</code>. O(n) rule evaluation in priority order. First blocking rule terminates. Enforces I₂.</p>
+
+  <h3><span class="sig">validate_fee_module</span>(<span class="param">fee: FeeModule</span>) → <span class="ret">None</span></h3>
+  <p>§6.12 — Raises <span class="inline-code">ValueError</span> if allocations don't sum to 10000 basis points.</p>
+
+  <h3><span class="sig">identity_status</span>(<span class="param">record: IdentityRecord, now_unix: int</span>) → <span class="ret">IdentityStatus</span></h3>
+  <p>§3.6 — Returns <span class="inline-code">VALID</span>, <span class="inline-code">EXPIRED</span>, or <span class="inline-code">REVOKED</span>.</p>
+
+  <h3><span class="sig">is_replay</span>(<span class="param">event: TransferEvent, ledger_history: set[str]</span>) → <span class="ret">bool</span></h3>
+  <p>§9.6 — Returns <span class="inline-code">True</span> if event's TxID is already in ledger history.</p>
+
+  <h2>types — Enums &amp; Dataclasses</h2>
+  <table>
+    <tr><th>Type</th><th>Section</th><th>Values</th></tr>
+    <tr><td><code>AssetState</code></td><td>§2.4</td><td>ISSUED · ACTIVE · RESTRICTED · FROZEN · SUSPENDED · REDEEMED · BURNED</td></tr>
+    <tr><td><code>AssetType</code></td><td>§2.3</td><td>CBDC · INDUSTRY_STABLE · REGULATED_SECURITY · UTILITY · GOVERNANCE · STORAGE_BACKED</td></tr>
+    <tr><td><code>IdentityLevel</code></td><td>§3.2</td><td>UNBOUND (0) · VERIFIED (1) · SOVEREIGN_VALIDATED (2) · MULTI_JURISDICTION (3)</td></tr>
+    <tr><td><code>RuleType</code></td><td>§4.4</td><td>HOLDING_PERIOD · SANCTIONS_SCREENING · TRANSACTION_THRESHOLD · …</td></tr>
+    <tr><td><code>EnforcementAction</code></td><td>§4.7</td><td>REJECT · FREEZE · RESTRICT · FLAG · REQUIRE_DISCLOSURE</td></tr>
+    <tr><td><code>GovernanceAction</code></td><td>§5.3</td><td>FREEZE_BALANCE · EMERGENCY_ROLLBACK · …</td></tr>
+  </table>
+
+  <h2>State Transition Matrix</h2>
+  <table>
+    <tr><th>From</th><th>Trigger</th><th>To</th></tr>
+    <tr><td>ISSUED</td><td>ACTIVATION</td><td>ACTIVE</td></tr>
+    <tr><td>ACTIVE</td><td>BREACH</td><td>RESTRICTED</td></tr>
+    <tr><td>ACTIVE</td><td>FREEZE</td><td>FROZEN</td></tr>
+    <tr><td>RESTRICTED</td><td>CLEARED</td><td>ACTIVE</td></tr>
+    <tr><td>FROZEN</td><td>RELEASE</td><td>ACTIVE</td></tr>
+    <tr><td>ACTIVE</td><td>REDEMPTION</td><td>REDEEMED</td></tr>
+    <tr><td>REDEEMED</td><td>FINALIZATION</td><td>BURNED ⛔</td></tr>
+    <tr><td>ACTIVE</td><td>SUSPENSION</td><td>SUSPENDED</td></tr>
+    <tr><td>SUSPENDED</td><td>REINSTATEMENT</td><td>ACTIVE</td></tr>
+  </table>
+</div>
+</body>
+</html>

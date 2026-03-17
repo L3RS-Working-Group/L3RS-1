@@ -1,0 +1,27 @@
+{
+  "entryPoints": ["src/index.ts"],
+  "entryPointStrategy": "expand",
+  "out": "../../docs/typescript",
+  "name": "L3RS-1 TypeScript SDK",
+  "includeVersion": true,
+  "readme": "../../docs/index.md",
+  "navigationLinks": {
+    "Specification": "https://l3rs.foundation/specification",
+    "GitHub": "https://github.com/L3RS-Foundation/L3RS-1"
+  },
+  "sidebarLinks": {
+    "Python": "../python/",
+    "Go": "../go/",
+    "Rust": "../rust/",
+    "Java": "../java/",
+    "Solidity": "../solidity/"
+  },
+  "plugin": [],
+  "treatWarningsAsErrors": false,
+  "excludePrivate": true,
+  "excludeProtected": false,
+  "groupOrder": ["modules", "Types", "Enumerations", "Interfaces", "Functions", "Variables"],
+  "categorizeByGroup": true,
+  "searchInComments": true,
+  "theme": "default"
+}

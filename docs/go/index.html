@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>L3RS-1 Go SDK — API Reference</title>
+<style>
+  :root{--accent:#2563eb;--bg:#f8fafc;--border:#e2e8f0;--code-bg:#1e293b}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:#1e293b;line-height:1.6}
+  nav{background:var(--code-bg);color:#fff;padding:0 2rem;display:flex;align-items:center;gap:2rem;height:56px}
+  nav a{color:#94a3b8;text-decoration:none;font-size:.9rem} nav a:hover{color:#fff}
+  nav .logo{color:#fff;font-weight:700;font-size:1.1rem;margin-right:auto}
+  .lang-bar{background:#fff;border-bottom:1px solid var(--border);padding:0 2rem;display:flex;gap:1rem;overflow-x:auto}
+  .lang-bar a{padding:.75rem 1rem;text-decoration:none;color:#64748b;font-size:.875rem;border-bottom:2px solid transparent;white-space:nowrap}
+  .lang-bar a.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+  .container{max-width:960px;margin:0 auto;padding:2rem}
+  h1{font-size:2rem;margin-bottom:.5rem}
+  h2{font-size:1.25rem;margin:2rem 0 1rem;padding-bottom:.5rem;border-bottom:1px solid var(--border)}
+  p{margin-bottom:1rem;color:#475569}
+  .badge{display:inline-block;background:#dbeafe;color:var(--accent);padding:.2rem .6rem;border-radius:4px;font-size:.8rem;font-weight:600;margin-bottom:1.5rem}
+  .install{background:var(--code-bg);color:#e2e8f0;padding:1rem 1.5rem;border-radius:8px;font-family:monospace;margin-bottom:2rem;font-size:.9rem}
+  pre{background:var(--code-bg);color:#e2e8f0;padding:1.25rem;border-radius:8px;overflow-x:auto;font-size:.875rem;margin:.5rem 0 1rem}
+  code{font-family:"SF Mono","Fira Code",monospace;font-size:.875rem}
+  table{width:100%;border-collapse:collapse;margin:1rem 0;font-size:.875rem}
+  th{background:#f1f5f9;padding:.6rem 1rem;text-align:left;font-weight:600}
+  td{padding:.6rem 1rem;border-top:1px solid var(--border)}
+  .note{background:#eff6ff;border-left:3px solid var(--accent);padding:.75rem 1rem;margin:1rem 0;border-radius:0 4px 4px 0;font-size:.9rem}
+</style>
+</head><body>
+<nav><span class="logo">L3RS-1 SDK</span>
+  <a href="../">Home</a>
+  <a href="https://github.com/L3RS-Foundation/L3RS-1">GitHub</a>
+  <a href="https://l3rs.foundation/specification">Specification</a>
+</nav>
+<div class="lang-bar">
+  <a href="../typescript/">TypeScript</a>
+  <a href="../python/">Python</a>
+  <a href="../go/" class="active">Go</a>
+  <a href="../rust/">Rust</a>
+  <a href="../java/">Java</a>
+  <a href="../solidity/">Solidity</a>
+</div>
+<div class="container">
+<h1>Go SDK</h1>
+<span class="badge">github.com/L3RS-Foundation/L3RS-1/packages/go - Go 1.22+</span>
+<div class="install">go get github.com/L3RS-Foundation/L3RS-1/packages/go</div>
+<div class="note">Zero external dependencies - pure Go stdlib.</div>
+<h2>Quick Example</h2>
+<pre><code>import "github.com/L3RS-Foundation/L3RS-1/packages/go/l3rs1/crypto"
+import "github.com/L3RS-Foundation/L3RS-1/packages/go/l3rs1/modules"
+
+id, _ := crypto.ConstructAssetID(
+    "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
+    1740355200, "0000000000000001")
+// id = "593f0dfb3da2fb8e8e21059e26f4a1875e9059a6d9d634e3065541e6c193506a"
+
+r := modules.ApplyStateTransition(types.AssetStateIssued, "ACTIVATION")
+// r.Success == true, r.NewState == "ACTIVE"</code></pre>
+<h2>API Reference</h2>
+<table><tr><th>Function/Method</th><th>§</th><th>Description</th></tr>
+<tr><td><code>constructAssetId / ConstructAssetID</code></td><td>2.2</td><td>H(pk_issuer ∥ ts ∥ nonce)</td></tr>
+<tr><td><code>constructCID / ConstructCID</code></td><td>8.3</td><td>CID = H(I ∥ SH ∥ CH ∥ GH ∥ t)</td></tr>
+<tr><td><code>constructTxId / ConstructTxID</code></td><td>9.6</td><td>TxID = H(sender ∥ receiver ∥ amount ∥ nonce ∥ ts)</td></tr>
+<tr><td><code>canonicalize</code></td><td>13.11</td><td>Sorted-key JSON, no whitespace</td></tr>
+<tr><td><code>applyStateTransition</code></td><td>2.5</td><td>Deterministic state machine, Invariant I1</td></tr>
+<tr><td><code>evaluateCompliance</code></td><td>4.3</td><td>C: E to {0,1}, O(n), Invariant I2</td></tr>
+<tr><td><code>validateFeeModule</code></td><td>6.12</td><td>Allocations must sum to 10000 bp</td></tr>
+<tr><td><code>identityStatus</code></td><td>3.6</td><td>VALID / EXPIRED / REVOKED</td></tr>
+<tr><td><code>isReplay</code></td><td>9.6</td><td>Replay protection via TxID/nonce</td></tr>
+</table>
+<h2>State Transition Matrix</h2>
+<table><tr><th>From</th><th>Trigger</th><th>To</th></tr>
+<tr><td>ISSUED</td><td>ACTIVATION</td><td>ACTIVE</td></tr>
+<tr><td>ACTIVE</td><td>BREACH</td><td>RESTRICTED</td></tr>
+<tr><td>ACTIVE</td><td>FREEZE</td><td>FROZEN</td></tr>
+<tr><td>RESTRICTED</td><td>CLEARED</td><td>ACTIVE</td></tr>
+<tr><td>FROZEN</td><td>RELEASE</td><td>ACTIVE</td></tr>
+<tr><td>ACTIVE</td><td>REDEMPTION</td><td>REDEEMED</td></tr>
+<tr><td>REDEEMED</td><td>FINALIZATION</td><td>BURNED (terminal)</td></tr>
+<tr><td>ACTIVE</td><td>SUSPENSION</td><td>SUSPENDED</td></tr>
+<tr><td>SUSPENDED</td><td>REINSTATEMENT</td><td>ACTIVE</td></tr>
+</table>
+</div></body></html>

@@ -1,9 +1,17 @@
-/** L3RS-1 Core Modules — TypeScript */
+/**
+ * @module modules
+ * @description L3RS-1 core protocol modules — state machine, compliance,
+ * identity, governance, fees, cross-chain, settlement, and transfer.
+ */
 import { constructTxId } from "../crypto/index.js";
-import { AssetState, ComplianceDecision, ComplianceModule, EnforcementAction, FeeModule, IdentityLevel, IdentityRecord, IdentityStatus, RuleType, TransferEvent } from "../types/index.js";
+import {
+  AssetState, ComplianceDecision, ComplianceModule, EnforcementAction,
+  FeeModule, IdentityLevel, IdentityRecord, IdentityStatus, RuleType, TransferEvent,
+} from "../types/index.js";
 
-// ── §2.5 State Transitions ───────────────────────────────────────────────────
+// ── §2.5 State Transitions ────────────────────────────────────────────────────
 
+/** All valid state transitions per §2.5 transition matrix. */
 const TRANSITIONS: [AssetState, string, AssetState][] = [
   [AssetState.ISSUED,     "ACTIVATION",    AssetState.ACTIVE],
   [AssetState.ACTIVE,     "BREACH",        AssetState.RESTRICTED],
@@ -16,6 +24,15 @@ const TRANSITIONS: [AssetState, string, AssetState][] = [
   [AssetState.SUSPENDED,  "REINSTATEMENT", AssetState.ACTIVE],
 ];
 
+/**
+ * §2.5 — Apply a state transition. Enforces Invariant I₁.
+ * @param current - Current asset state
+ * @param trigger - Transition trigger string
+ * @returns `{ success: true, newState }` or `{ success: false, error }`
+ * @example
+ * applyStateTransition(AssetState.ISSUED, "ACTIVATION")
+ * // → { success: true, newState: AssetState.ACTIVE }
+ */
 export function applyStateTransition(
   current: AssetState,
   trigger: string,
@@ -28,10 +45,15 @@ export function applyStateTransition(
   return { success: false, error: `No transition from ${current} via ${trigger}` };
 }
 
-// ── §4 Compliance ────────────────────────────────────────────────────────────
+// ── §4 Compliance ─────────────────────────────────────────────────────────────
 
 const BLOCKING = new Set([EnforcementAction.REJECT, EnforcementAction.FREEZE, EnforcementAction.RESTRICT]);
 
+/**
+ * §4.3 — Compliance engine. `C: E → {0,1}`.
+ * Evaluates rules in priority order; first blocking rule terminates. O(n).
+ * Enforces Invariant I₂.
+ */
 export function evaluateCompliance(
   module: ComplianceModule,
   state: AssetState,
@@ -41,9 +63,7 @@ export function evaluateCompliance(
   timestamp: number,
   jurisdiction: string,
 ): ComplianceDecision {
-  if (state !== AssetState.ACTIVE) {
-    return { allowed: false };
-  }
+  if (state !== AssetState.ACTIVE) return { allowed: false };
   const sorted = [...module.rules].sort((a, b) => a.priority - b.priority);
   for (const rule of sorted) {
     if (rule.scope !== "*" && rule.scope !== jurisdiction) continue;
@@ -67,24 +87,36 @@ export function evaluateCompliance(
   return { allowed: true };
 }
 
-// ── §6.12 Fee Validation ─────────────────────────────────────────────────────
+// ── §6.12 Fee Validation ──────────────────────────────────────────────────────
 
+/**
+ * §6.12 — Validate fee module. Allocations must sum to exactly 10000 basis points.
+ * @throws Error if constraint violated
+ */
 export function validateFeeModule(fee: FeeModule): void {
   const total = fee.allocations.reduce((s, a) => s + a.basisPoints, 0);
   if (total !== 10_000) throw new Error(`Fee allocations must sum to 10000; got ${total}`);
   if (fee.allocations.some(a => a.basisPoints < 0)) throw new Error("Negative allocation");
 }
 
-// ── §3.6 Identity Status ─────────────────────────────────────────────────────
+// ── §3.6 Identity Status ──────────────────────────────────────────────────────
 
+/**
+ * §3.6 — Compute identity record status.
+ * `Status(IR) ∈ {VALID, EXPIRED, REVOKED, UNKNOWN}`
+ */
 export function identityStatus(record: IdentityRecord, nowUnix: number): IdentityStatus {
   if (record.revoked) return IdentityStatus.REVOKED;
   if (nowUnix >= record.expiry) return IdentityStatus.EXPIRED;
   return IdentityStatus.VALID;
 }
 
-// ── §9.6 Replay Protection ───────────────────────────────────────────────────
+// ── §9.6 Replay Protection ────────────────────────────────────────────────────
 
+/**
+ * §9.6 — Replay protection check.
+ * Returns `true` if the event's TxID is already in ledger history.
+ */
 export function isReplay(event: TransferEvent, ledgerHistory: Set<string>): boolean {
   const txId = constructTxId(
     event.sender, event.receiver, event.amount, event.nonce, event.timestamp,
