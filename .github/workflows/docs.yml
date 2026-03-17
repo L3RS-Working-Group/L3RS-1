@@ -1,0 +1,125 @@
+name: Docs
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'packages/typescript/src/**'
+      - 'docs/**'
+      - '.github/workflows/docs.yml'
+  # Also deploy on SDK releases
+  workflow_run:
+    workflows: ["Release"]
+    types: [completed]
+  # Manual trigger
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build docs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install TypeDoc
+        working-directory: packages/typescript
+        run: npm install
+
+      - name: Generate TypeScript API docs
+        working-directory: packages/typescript
+        run: npx typedoc
+
+      - name: Create docs index page (redirect)
+        run: |
+          cat > docs/index.html << 'HTML'
+          <!DOCTYPE html>
+          <html>
+          <head>
+          <meta charset="UTF-8">
+          <title>L3RS-1 SDK Documentation</title>
+          <style>
+            body { font-family: -apple-system, sans-serif; max-width: 800px; margin: 4rem auto; padding: 2rem; }
+            h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+            .subtitle { color: #64748b; margin-bottom: 3rem; }
+            .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
+            a.card { display: block; padding: 1.5rem; border: 1px solid #e2e8f0; border-radius: 8px; text-decoration: none; color: inherit; transition: border-color .2s; }
+            a.card:hover { border-color: #2563eb; }
+            .lang { font-weight: 700; font-size: 1.1rem; margin-bottom: 0.25rem; }
+            .meta { font-size: 0.8rem; color: #64748b; }
+            .vector { background: #1e293b; color: #e2e8f0; padding: 1.5rem; border-radius: 8px; font-family: monospace; font-size: 0.85rem; margin-top: 3rem; }
+            .vector .label { color: #94a3b8; margin-bottom: 0.5rem; }
+          </style>
+          </head>
+          <body>
+          <h1>L3RS-1 SDK</h1>
+          <p class="subtitle">Layer-3 Regulated Asset Standard &middot; v1.0.0 &middot; CROSSCHAIN Conformance</p>
+          <div class="grid">
+            <a class="card" href="typescript/">
+              <div class="lang">TypeScript</div>
+              <div class="meta">@l3rs/reference-impl &middot; Node 18+</div>
+            </a>
+            <a class="card" href="python/">
+              <div class="lang">Python</div>
+              <div class="meta">l3rs1-sdk &middot; Python 3.11+</div>
+            </a>
+            <a class="card" href="go/">
+              <div class="lang">Go</div>
+              <div class="meta">packages/go &middot; Go 1.22+</div>
+            </a>
+            <a class="card" href="rust/">
+              <div class="lang">Rust</div>
+              <div class="meta">l3rs1-sdk &middot; Rust 1.77+</div>
+            </a>
+            <a class="card" href="java/">
+              <div class="lang">Java</div>
+              <div class="meta">foundation.l3rs1 &middot; Java 21+</div>
+            </a>
+            <a class="card" href="solidity/">
+              <div class="lang">Solidity</div>
+              <div class="meta">@l3rs/contracts &middot; 0.8.24</div>
+            </a>
+          </div>
+          <div class="vector">
+            <div class="label">// Canonical Test Vector &sect;2.2 &mdash; all 6 implementations must produce:</div>
+            construct_asset_id(<br>
+            &nbsp;&nbsp;pubkey = "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",<br>
+            &nbsp;&nbsp;timestamp = 1740355200,<br>
+            &nbsp;&nbsp;nonce = "0000000000000001"<br>
+            ) &rarr; "593f0dfb3da2fb8e8e21059e26f4a1875e9059a6d9d634e3065541e6c193506a"
+          </div>
+          </body>
+          </html>
+          HTML
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
