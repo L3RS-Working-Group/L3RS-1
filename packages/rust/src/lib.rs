@@ -1,3 +1,4 @@
+#![allow(dead_code, unused_imports, clippy::module_name_repetitions)]
 //! l3rs1 — L3RS-1 Reference Implementation — Rust
 //! CROSSCHAIN conformance class — all invariants I₁–I₁₁
 
@@ -9,8 +10,8 @@ pub use crypto::*;
 pub use modules::*;
 pub use types::*;
 
-pub const SDK_VERSION:       &str = "1.0.0";
-pub const STANDARD_VERSION:  &str = "L3RS-1.0.0";
+pub const SDK_VERSION: &str = "1.0.0";
+pub const STANDARD_VERSION: &str = "L3RS-1.0.0";
 pub const CONFORMANCE_CLASS: &str = "CROSSCHAIN";
 
 #[derive(Debug, thiserror::Error)]

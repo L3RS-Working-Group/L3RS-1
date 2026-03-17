@@ -163,3 +163,8 @@ export function constructOverrideHash(overrideId: string, authority: string,
   return sha256(fromUtf8(overrideId), fromUtf8(authority),
                 fromUtf8(action), toBigEndian8(timestampUnix));
 }
+
+/** Abstract interface for signature verification per §10.3. */
+export interface SignatureVerifier {
+  verify(message: Uint8Array, signatureHex: string, publicKeyHex: string): boolean;
+}

@@ -13,8 +13,7 @@ from l3rs1.types import (
     Asset, AssetState, ComplianceDecision, ComplianceModule, ComplianceRule,
     EnforcementAction, GovernanceAction, GovernanceModule, IdentityLevel,
     IdentityRecord, IdentityStatus, OverrideObject, FeeModule,
-    ReserveInterface, ReserveStatus, AttestationFrequency, RuleType,
-    SettlementProof, TransferEvent, ZKProof,
+    RuleType, SettlementProof, TransferEvent,
 )
 from l3rs1.crypto import (
     construct_override_hash, construct_tx_id, hash_object,

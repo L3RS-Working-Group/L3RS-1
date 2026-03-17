@@ -92,3 +92,79 @@ export interface ComplianceDecision {
   blockedBy?: ComplianceRule;
   action?:    EnforcementAction;
 }
+
+export interface ZKProof {
+  scheme:             string;
+  statement:          string;
+  witnessCommitment:  string;
+  proofBytes:         string;
+  nonce:              string;
+}
+
+export interface IdentityRecord {
+  identityHash:          string;
+  verificationAuthority: string;
+  jurisdictionIdentity:  string;
+  expiry:                number;
+  revoked:               boolean;
+  attributeCommitments?: string[];
+  proof?:                ZKProof;
+}
+
+export interface LegalMirror {
+  jurisdiction:       string;
+  legalHash:          string;
+  legalVersion:       string;
+  timestamp:          number;
+  authoritySignature?: string;
+}
+
+export interface OverrideObject {
+  overrideId:  string;
+  authority:   string;
+  action:      GovernanceAction;
+  target:      string;
+  legalBasis:  string;
+  timestamp:   number;
+  signature:   string;
+}
+
+export interface RedemptionLogic {
+  eligibility:  string;
+  procedure:    string;
+  settlement:   string;
+  timeframeSec: number;
+}
+
+export interface ReserveInterface {
+  custodianId:          string;
+  backingType:          BackingType;
+  auditHash:            string;
+  attestationFrequency: AttestationFrequency;
+  insolvencyPriority:   InsolvencyPriority;
+  redemptionLogic:      RedemptionLogic;
+}
+
+export interface CrossChainMetadata {
+  certificateId:  string;
+  originChainId:  string;
+  complianceHash: string;
+  governanceHash: string;
+  stateHash:      string;
+  timestamp:      number;
+}
+
+export interface Asset {
+  assetId:           string;
+  assetType:         AssetType;
+  jurisdiction:      string;
+  legalMirror:       LegalMirror;
+  identityLevel:     IdentityLevel;
+  complianceModule:  ComplianceModule;
+  governanceModule:  GovernanceModule;
+  feeModule:         FeeModule;
+  crosschainMetadata: CrossChainMetadata;
+  state:             AssetState;
+  standardVersion:   string;
+  reserveInterface?: ReserveInterface;
+}

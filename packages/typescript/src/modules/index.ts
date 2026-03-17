@@ -1,6 +1,6 @@
 /** L3RS-1 Core Modules — TypeScript */
 import { constructTxId } from "../crypto/index.js";
-import { AssetState, ComplianceDecision, ComplianceModule, EnforcementAction, FeeModule, IdentityLevel, IdentityStatus, RuleType, TransferEvent } from "../types/index.js";
+import { AssetState, ComplianceDecision, ComplianceModule, EnforcementAction, FeeModule, IdentityLevel, IdentityRecord, IdentityStatus, RuleType, TransferEvent } from "../types/index.js";
 
 // ── §2.5 State Transitions ───────────────────────────────────────────────────
 
@@ -76,14 +76,6 @@ export function validateFeeModule(fee: FeeModule): void {
 }
 
 // ── §3.6 Identity Status ─────────────────────────────────────────────────────
-
-export interface IdentityRecord {
-  identityHash: string;
-  verificationAuthority: string;
-  jurisdictionIdentity: string;
-  expiry: number;
-  revoked: boolean;
-}
 
 export function identityStatus(record: IdentityRecord, nowUnix: number): IdentityStatus {
   if (record.revoked) return IdentityStatus.REVOKED;
