@@ -21,10 +21,8 @@ authors:
   - given-names: Zurab
     family-names: Ashvil
     email: zman@zurabashvil.com
-    affiliation: L3RS Foundation; L3COS Ltd, T3RRA Ltd
     orcid: "https://orcid.org/0009-0000-9848-7256"
-  - name: "L3RS Foundation"
-    website: "https://l3rs.foundation"
+    affiliation: "T3RRA Ltd; L3COS Ltd; L3RS Foundation"
 version: 1.0.0
 date-released: 2026-03-16
 license: Apache-2.0
@@ -45,15 +43,13 @@ keywords:
   - formal-verification
   - regulated-digital-assets
 identifiers:
+  - type: doi
+    value: "10.5281/zenodo.20226281"
+    description: "Zenodo DOI for the L3RS-1 specification, v1.0.0"
   - type: url
     value: "https://github.com/L3RS-Foundation/L3RS-1"
     description: "Canonical source repository"
-  # Add the following identifiers as they become available:
-  #
-  - type: doi
-    value: "10.5281/zenodo.20226281"
-    description: "Zenodo DOI for v1.0.0 release"
-  #
+  # Add when assigned:
   # - type: other
   #   value: "arXiv:2604.XXXXX"
   #   description: "arXiv preprint of the L3RS-1 specification"
@@ -63,23 +59,23 @@ preferred-citation:
   authors:
     - given-names: Zurab
       family-names: Ashvil
-      affiliation: L3RS Foundation
+      orcid: "https://orcid.org/0009-0000-9848-7256"
+      affiliation: "T3RRA Ltd; L3COS Ltd; L3RS Foundation"
   year: 2026
   month: 2
   publisher:
-    name: "L3RS Foundation"
-  url: "https://l3rs.foundation"
+    name: "Zenodo"
+  doi: "10.5281/zenodo.20226281"
+  url: "https://doi.org/10.5281/zenodo.20226281"
   abstract: >-
-    L3RS-1 is a deterministic, compliance-first token standard for
-    regulated digital assets. The standard defines a formal asset
-    model with deterministic state transitions, identity binding
-    with multi-jurisdiction stacking and zero-knowledge proof
-    compatibility, a compliance engine enforcing bounded rule
-    evaluation in priority order, a governance override mechanism
-    with quorum requirements and immutable logging, deterministic
-    fee routing, a reserve attestation interface, a cross-chain
-    meta-standard with downgrade resistance, atomic settlement
-    with replay protection, and a canonical schema with
-    SHA-256-anchored object hashing. Eleven protocol invariants
-    (I1 through I11) are enforced across all conformant
-    implementations.
+    L3RS-1 defines a deterministic, compliance-first metastandard for
+    regulated digital assets. It binds asset state, compliance logic,
+    governance configuration, and jurisdictional anchoring into a
+    cryptographically verifiable certificate identifier (CID). The
+    specification establishes formal invariants, canonical
+    serialization rules, and a defined adversarial model to ensure
+    downgrade resistance and cross-chain integrity. The standard
+    defines a complete state machine for tokenized real-world assets,
+    enforces eleven protocol invariants (I1 through I11) across all
+    conformant implementations, and supports the CROSSCHAIN
+    conformance class for cross-chain regulated asset settlement.
