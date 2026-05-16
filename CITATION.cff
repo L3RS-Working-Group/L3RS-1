@@ -1,0 +1,85 @@
+cff-version: 1.2.0
+message: >-
+  If you use the L3RS-1 reference implementation, or implement the
+  L3RS-1 standard in your own software, please cite both this
+  reference implementation and the underlying specification, as
+  shown below.
+title: "L3RS-1 SDK: Reference Implementation of the Layer-3 Regulated Asset Standard"
+abstract: >-
+  Multi-language reference implementation of the L3RS-1 specification,
+  a deterministic, compliance-first token standard for regulated
+  digital assets. Implements the CROSSCHAIN conformance class,
+  covering the formal asset model, identity binding, compliance
+  engine, governance override, fee routing, reserve interface,
+  cross-chain meta-standard, settlement finality, security model,
+  and canonical schema, with all eleven protocol invariants (I1
+  through I11) enforced. Ledger-agnostic, pure deterministic
+  libraries with no transport or ledger coupling, distributed in
+  TypeScript, Python, Go, Rust, Java, and Solidity.
+type: software
+authors:
+  - given-names: Zurab
+    family-names: Ashvil
+    email: zman@zurabashvil.com
+    affiliation: L3RS Foundation; L3COS Ltd, T3RRA Ltd
+    orcid: "https://orcid.org/0009-0000-9848-7256"
+  - name: "L3RS Foundation"
+    website: "https://l3rs.foundation"
+version: 1.0.0
+date-released: 2026-03-16
+license: Apache-2.0
+repository-code: "https://github.com/L3RS-Foundation/L3RS-1"
+url: "https://l3rs.foundation"
+keywords:
+  - tokenization
+  - real-world-assets
+  - rwa
+  - token-standard
+  - blockchain
+  - compliance
+  - regulated-finance
+  - cross-chain
+  - settlement
+  - digital-securities
+  - cbdc
+  - formal-verification
+  - regulated-digital-assets
+identifiers:
+  - type: url
+    value: "https://github.com/L3RS-Foundation/L3RS-1"
+    description: "Canonical source repository"
+  # Add the following identifiers as they become available:
+  #
+  - type: doi
+    value: "10.5281/zenodo.20226281"
+    description: "Zenodo DOI for v1.0.0 release"
+  #
+  # - type: other
+  #   value: "arXiv:2604.XXXXX"
+  #   description: "arXiv preprint of the L3RS-1 specification"
+preferred-citation:
+  type: generic
+  title: "L3RS-1: Layer-3 Regulated Asset Standard, Version 1.0.0"
+  authors:
+    - given-names: Zurab
+      family-names: Ashvil
+      affiliation: L3RS Foundation
+  year: 2026
+  month: 2
+  publisher:
+    name: "L3RS Foundation"
+  url: "https://l3rs.foundation"
+  abstract: >-
+    L3RS-1 is a deterministic, compliance-first token standard for
+    regulated digital assets. The standard defines a formal asset
+    model with deterministic state transitions, identity binding
+    with multi-jurisdiction stacking and zero-knowledge proof
+    compatibility, a compliance engine enforcing bounded rule
+    evaluation in priority order, a governance override mechanism
+    with quorum requirements and immutable logging, deterministic
+    fee routing, a reserve attestation interface, a cross-chain
+    meta-standard with downgrade resistance, atomic settlement
+    with replay protection, and a canonical schema with
+    SHA-256-anchored object hashing. Eleven protocol invariants
+    (I1 through I11) are enforced across all conformant
+    implementations.
